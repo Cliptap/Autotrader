@@ -1,4 +1,4 @@
-"""
+﻿"""
 cliptap Scanner — Vigilante ligero 24/7
 
 Solo ESCANEA y NOTIFICA. No ejecuta trades.
@@ -25,7 +25,7 @@ import requests
 
 # ─── CONFIG ───────────────────────────────────────────
 BASE_URL = "https://ai4trade.ai/api"
-TOKEN = os.getenv("CLIPTAP_AI_TOKEN", "")
+TOKEN = os.getenv("CLIPTAP_AI_TOKEN", "JPdLH26cs4tg-7n1NSZBkzIpe-sI0d0MFa0HYjNXpt8")
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -43,7 +43,9 @@ TRACKED = ["BTC", "ETH", "SOL", "LINK", "ADA", "DOGE", "FET", "AAVE", "XRP", "AV
 
 SCAN_INTERVAL = 300
 MIN_BUY_CONSENSUS = 2
-MIN_SELL_CONSENSUS = 3
+MIN_SELL_CONSENSUS = 2
+GLOBAL_SELL_PANIC = 4    # >=4 agentes del feed vendiendo = alerta
+GLOBAL_BUY_FRENZY = 5    # >=5 agentes del feed comprando = senal fuerte
 MACRO_BULLISH_THRESHOLD = 3
 
 # ─── NTFY.SH (notificaciones push al celu) ────────────
@@ -135,6 +137,28 @@ def scan():
                 f"🔴 {sym} — {len(sellers)} agentes vendiendo",
                 f"Agentes: {agents_str}",
                 "high",
+            )
+
+    # Feed global: detectar pánicos de venta y frenesíes de compra
+    feed = fetch(f"{BASE_URL}/signals/feed?limit=20&sort=new&message_type=operation")
+    if feed:
+        feed_actions = {}
+        for s in feed.get("signals", []):
+            sym = s.get("symbol")
+            side = s.get("side")
+            if not sym or not side or sym not in TRACKED:
+                continue
+            if sym not in feed_actions:
+                feed_actions[sym] = {"buy": 0, "sell": 0}
+            feed_actions[sym][side] += 1
+
+        for sym, counts in feed_actions.items():
+            if counts["sell"] >= GLOBAL_SELL_PANIC:
+                log_alert(f"[PANICO] {sym} — {counts['sell']} agentes del feed vendiendo!")
+                push(f"🚨 PANICO VENTA {sym}", f"{counts['sell']} agentes vendiendo en el feed global", "high")
+            if counts["buy"] >= GLOBAL_BUY_FRENZY:
+                log_alert(f"[FRENESI] {sym} — {counts['buy']} agentes del feed comprando!")
+                push(f"🚀 FRENESI COMPRA {sym}", f"{counts['buy']} agentes comprando en el feed global", "high")
             )
 
     if not opportunities:
