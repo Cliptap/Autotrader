@@ -159,7 +159,6 @@ def scan():
             if counts["buy"] >= GLOBAL_BUY_FRENZY:
                 log_alert(f"[FRENESI] {sym} — {counts['buy']} agentes del feed comprando!")
                 push(f"🚀 FRENESI COMPRA {sym}", f"{counts['buy']} agentes comprando en el feed global", "high")
-            )
 
     if not opportunities:
         print(f"[{datetime.now(timezone.utc).strftime('%H:%M')}] Sin señales claras")
