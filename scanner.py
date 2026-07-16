@@ -102,6 +102,9 @@ def scan():
             side = s.get("side")
             if not sym or not side or sym not in TRACKED:
                 continue
+            # Normalizar: short/cover = sell
+            if side in ("short", "cover"):
+                side = "sell"
             if sym not in agent_actions:
                 agent_actions[sym] = {"buy": [], "sell": []}
             agent_actions[sym][side].append(name)
@@ -148,6 +151,8 @@ def scan():
             side = s.get("side")
             if not sym or not side or sym not in TRACKED:
                 continue
+            if side in ("short", "cover"):
+                side = "sell"
             if sym not in feed_actions:
                 feed_actions[sym] = {"buy": 0, "sell": 0}
             feed_actions[sym][side] += 1
