@@ -39,7 +39,10 @@ FOLLOWED_AGENTS = {
     3120: "VoltSignalsAI4",
 }
 
-TRACKED = ["BTC", "ETH", "SOL", "LINK", "ADA", "DOGE", "FET", "AAVE", "XRP", "AVAX", "SUI", "RENDER"]
+TRACKED_CRYPTO = ["BTC", "ETH", "SOL", "LINK", "ADA", "DOGE", "FET", "AAVE", "XRP", "AVAX", "SUI", "RENDER"]
+TRACKED_STOCKS = ["AAPL", "AXP", "NVDA", "MSFT", "AMD", "MU", "GOOGL", "META", "CAT", "MRK", "JPM"]
+STOCK_MIN_SCORE = 8     # solo alertar si raftapart score >= 8
+STOCK_MIN_COMMUNITY = 5  # minimo 5 traders comprando
 
 SCAN_INTERVAL = 300
 MIN_BUY_CONSENSUS = 2
@@ -81,6 +84,18 @@ def log_alert(entry):
         f.write(f"- {line}\n")
     print(line)
 
+# ─── STOCKS ───────────────────────────────────────────
+def is_us_market_open():
+    """NYSE: Mon-Fri 9:30-16:00 ET (13:30-20:00 UTC / 14:30-21:00 UTC DST)."""
+    now = datetime.now(timezone.utc)
+    if now.weekday() >= 5:  # Sat/Sun
+        return False
+    # US Eastern is UTC-4 in July (EDT)
+    hour_et = (now.hour - 4) % 24
+    minute = now.minute
+    minutes_et = hour_et * 60 + minute
+    return 570 <= minutes_et < 960  # 9:30-16:00
+
 # ─── ESCANEO ──────────────────────────────────────────
 def scan():
     opportunities = []
@@ -98,7 +113,7 @@ def scan():
         for s in signals.get("signals", []):
             sym = s.get("symbol")
             side = s.get("side")
-            if not sym or not side or sym not in TRACKED:
+            if not sym or not side or sym not in TRACKED_CRYPTO:
                 continue
             # Normalizar: short/cover = sell
             if side in ("short", "cover"):
@@ -107,7 +122,7 @@ def scan():
                 agent_actions[sym] = {"buy": [], "sell": []}
             agent_actions[sym][side].append(name)
 
-    # Analizar
+    # Analizar crypto
     for sym, actions in agent_actions.items():
         buyers = actions["buy"]
         sellers = actions["sell"]
@@ -137,7 +152,7 @@ def scan():
         for s in feed.get("signals", []):
             sym = s.get("symbol")
             side = s.get("side")
-            if not sym or not side or sym not in TRACKED:
+            if not sym or not side or sym not in TRACKED_CRYPTO:
                 continue
             if side in ("short", "cover"):
                 side = "sell"
@@ -151,7 +166,32 @@ def scan():
                 push(f"FRENESI COMPRA {sym}", f"{counts['buy']} agentes comprando en el feed global", "high")
 
     if not opportunities:
-        print(f"[{datetime.now(timezone.utc).strftime('%H:%M')}] Sin señales claras")
+        print(f"[{datetime.now(timezone.utc).strftime('%H:%M')}] Sin señales crypto claras")
+
+    # ── Stocks (solo durante market hours + alta convicción) ──
+    if is_us_market_open():
+        stock_signals = fetch(f"{BASE_URL}/signals/1563?limit=1")  # raftapart
+        if stock_signals:
+            for s in stock_signals.get("signals", []):
+                if s.get("market") != "us-stock":
+                    continue
+                content = s.get("content", "")
+                for sym in TRACKED_STOCKS:
+                    if f"{sym}: **BUY**" in content:
+                        # Extraer score
+                        import re
+                        m = re.search(rf"{sym}:\s+\*\*BUY\*\*\s+\(Score:\s+([\d.]+)", content)
+                        score = float(m.group(1)) if m else 0
+                        # Extraer comunidad
+                        cm = re.search(rf"Community:\s+(\d+)B", content)
+                        community = int(cm.group(1)) if cm else 0
+                        if score >= STOCK_MIN_SCORE and community >= STOCK_MIN_COMMUNITY:
+                            # Precio via Alpaca no disponible aqui, usamos API price
+                            price_data = fetch(f"{BASE_URL}/price?symbol={sym}&market=us-stock")
+                            price = price_data.get("price") if price_data else "?"
+                            msg = f"{sym} @ ${price} — raftapart score {score}, {community}B comunidad"
+                            log_alert(f"📈 STOCK {msg}")
+                            push(f"📈 {sym} BUY", f"Score: {score}\nComunidad: {community}B\nPrecio: ${price}", "high")
 
 # ─── MAIN ─────────────────────────────────────────────
 def main():
@@ -161,8 +201,8 @@ def main():
         print("=" * 55)
         print("  cliptap Scanner — ntfy.sh → tu celular")
         print(f"  Topic: {NTFY_TOPIC}")
-        print(f"  {len(FOLLOWED_AGENTS)} agentes | {len(TRACKED)} activos | cada {SCAN_INTERVAL}s")
-        print(f"  Compra: >= {MIN_BUY_CONSENSUS} agentes | Venta: >= {MIN_SELL_CONSENSUS} agentes")
+        print(f"  {len(FOLLOWED_AGENTS)} agentes | crypto: {len(TRACKED_CRYPTO)} stocks: {len(TRACKED_STOCKS)} | cada {SCAN_INTERVAL}s")
+        print(f"  Compra: >= {MIN_BUY_CONSENSUS} agentes | Stocks: score >= {STOCK_MIN_SCORE}")
         print("=" * 55)
         print()
         push("cliptap Scanner iniciado", "Vigilando oportunidades de trading...")
