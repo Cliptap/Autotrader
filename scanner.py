@@ -43,9 +43,7 @@ TRACKED = ["BTC", "ETH", "SOL", "LINK", "ADA", "DOGE", "FET", "AAVE", "XRP", "AV
 
 SCAN_INTERVAL = 300
 MIN_BUY_CONSENSUS = 2
-MIN_SELL_CONSENSUS = 2
-GLOBAL_SELL_PANIC = 4    # >=4 agentes del feed vendiendo = alerta
-GLOBAL_BUY_FRENZY = 5    # >=5 agentes del feed comprando = senal fuerte
+GLOBAL_BUY_FRENZY = 5
 MACRO_BULLISH_THRESHOLD = 3
 
 # ─── NTFY.SH (notificaciones push al celu) ────────────
@@ -132,17 +130,7 @@ def scan():
                 priority,
             )
 
-        if len(sellers) >= MIN_SELL_CONSENSUS:
-            agents_str = ", ".join(sellers[:4])
-            msg = f"{sym} — {len(sellers)} agentes vendiendo: {agents_str}"
-            log_alert(f"🔴 SELL {msg}")
-            push(
-                f"🔴 {sym} — {len(sellers)} agentes vendiendo",
-                f"Agentes: {agents_str}",
-                "high",
-            )
-
-    # Feed global: detectar pánicos de venta y frenesíes de compra
+    # Feed global: detectar frenesíes de compra
     feed = fetch(f"{BASE_URL}/signals/feed?limit=20&sort=new&message_type=operation")
     if feed:
         feed_actions = {}
@@ -158,12 +146,9 @@ def scan():
             feed_actions[sym][side] += 1
 
         for sym, counts in feed_actions.items():
-            if counts["sell"] >= GLOBAL_SELL_PANIC:
-                log_alert(f"[PANICO] {sym} — {counts['sell']} agentes del feed vendiendo!")
-                push(f"🚨 PANICO VENTA {sym}", f"{counts['sell']} agentes vendiendo en el feed global", "high")
             if counts["buy"] >= GLOBAL_BUY_FRENZY:
                 log_alert(f"[FRENESI] {sym} — {counts['buy']} agentes del feed comprando!")
-                push(f"🚀 FRENESI COMPRA {sym}", f"{counts['buy']} agentes comprando en el feed global", "high")
+                push(f"FRENESI COMPRA {sym}", f"{counts['buy']} agentes comprando en el feed global", "high")
 
     if not opportunities:
         print(f"[{datetime.now(timezone.utc).strftime('%H:%M')}] Sin señales claras")
