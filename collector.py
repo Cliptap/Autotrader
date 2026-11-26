@@ -31,6 +31,7 @@ import pystray
 from PIL import Image, ImageDraw
 
 from env import load_env
+from sanitize import scrub_secrets
 
 load_env()
 
@@ -142,21 +143,6 @@ def fetch(url, method="GET", body=None, timeout=None):
         return {"error": str(e), "url": url}
 
 # ─── SNAPSHOTS ────────────────────────────────────────
-SENSITIVE_KEYS = {"token", "api_key", "apikey", "secret", "password"}
-
-
-def scrub_secrets(value):
-    """Quita credenciales antes de persistir datos de la API en disco."""
-    if isinstance(value, dict):
-        return {
-            key: "<redacted>" if str(key).lower() in SENSITIVE_KEYS else scrub_secrets(item)
-            for key, item in value.items()
-        }
-    if isinstance(value, list):
-        return [scrub_secrets(item) for item in value]
-    return value
-
-
 def collect_snapshot():
     """Recolecta un snapshot completo del mercado."""
     ts = datetime.now(timezone.utc)
