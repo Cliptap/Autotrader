@@ -1,0 +1,4 @@
+# CCXT MCP server dependencies
+ccxt>=4.4.0
+mcp>=1.2.0
+python-dotenv>=1.0.0
