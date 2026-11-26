@@ -166,8 +166,16 @@ RATE_LIMIT_ORDER_SEC=2.0
 python mcp/ccxt/server.py --healthcheck
 ```
 
+4. Ver las reglas reales del exchange y validar la cantidad:
+
+```bash
+python scripts/exchange_profile.py profile --symbol BTC/USDT
+python scripts/exchange_profile.py check --symbol BTC/USDT --qty 0.0002 --price 60000
+```
+
 Los límites completos y las 8 compuertas están en
-[`docs/trading-modes.md`](trading-modes.md).
+[`docs/trading-modes.md`](trading-modes.md). Para operar en otro exchange, ver
+[`docs/multi-exchange.md`](multi-exchange.md).
 
 ### Live
 

@@ -132,6 +132,7 @@ Guía completa: [`docs/setup.md`](docs/setup.md).
 ├── scanner.py                 # vigilancia 24/7: consenso de agentes → push
 ├── collector.py               # snapshots de mercado + heartbeat (system tray)
 ├── risk_engine.py             # ejecuta los stops aunque no haya sesión abierta
+├── exchange_rules.py          # normaliza cantidades, ticks y mínimos por exchange
 ├── sanitize.py                # redacta credenciales antes de persistir datos
 ├── scripts/
 │   ├── preflight.py           # valida entorno, claves y conectividad
@@ -139,7 +140,8 @@ Guía completa: [`docs/setup.md`](docs/setup.md).
 │   ├── metrics.py             # journal, métricas y dashboard
 │   ├── reconcile.py           # paper ↔ venue ↔ journal, sin corregir nada
 │   ├── backtest.py            # replay de snapshots con la estrategia
-│   └── retention.py           # compacta snapshots viejos
+│   ├── retention.py           # compacta snapshots viejos
+│   └── exchange_profile.py    # límites, fees y validación por exchange
 ├── tests/                     # tests del motor de riesgo y de métricas
 ├── mcp/ccxt/                  # MCP server de ejecución crypto (CCXT)
 ├── .opencode/
@@ -196,6 +198,7 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 | [`docs/operations.md`](docs/operations.md) | Rutina diaria, revisión y respuesta a incidentes |
 | [`docs/scanner.md`](docs/scanner.md) | Lógica del scanner, cooldown y despliegue en Actions |
 | [`docs/retention.md`](docs/retention.md) | Compactación de snapshots sin perder lo necesario |
+| [`docs/multi-exchange.md`](docs/multi-exchange.md) | Normalizar mínimos, steps y fees por exchange |
 | [`docs/troubleshooting.md`](docs/troubleshooting.md) | Síntomas, causas y arreglos |
 | [`docs/roadmap.md`](docs/roadmap.md) | Qué falta y cómo construirlo |
 
@@ -213,5 +216,6 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 - Backtester sobre snapshots con fees, slippage y barrido de umbrales.
 - Scanner con dedup, cooldown y aviso de fin de consenso.
 - Retención de snapshots en tres niveles de resolución.
-- Pendiente: ejecución multi-exchange y Polymarket. Ver
+- Normalización de órdenes por exchange (mínimos, step, tick, fees).
+- Pendiente: swap/futuros y Polymarket. Ver
   [`docs/roadmap.md`](docs/roadmap.md).

@@ -34,6 +34,8 @@ bloquea la operación.
 | `SLIPPAGE_EXCEEDED` | El precio se movió > `MAX_SLIPPAGE_PCT` | Usar orden limit |
 | `DUPLICATE_ORDER` | Orden idéntica repetida en 30 s | Esperar la ventana o cambiar la orden |
 | `RATE_LIMITED` | Órdenes demasiado seguidas | Esperar `RATE_LIMIT_ORDER_SEC` |
+| `LOT_SIZE_VIOLATION` con otro exchange | Mínimo o step distintos de Binance | `python scripts/exchange_profile.py check` y normalizar la cantidad |
+| `close_failed_permanent` en el motor | El plan no cumple el mínimo del venue | Ver [`multi-exchange.md`](multi-exchange.md) y corregir el plan |
 | Timeout de red | Estado de la orden incierto | `reconcile_order(client_order_id, symbol)` antes de reintentar |
 | `uvx: command not found` | uv no instalado | `pip install uv` |
 

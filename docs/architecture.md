@@ -62,6 +62,11 @@ Compuertas antes de cada orden:
 Además: `client_order_id` idempotente y `reconcile_order()` para resolver
 timeouts sin reintentar a ciegas.
 
+Antes de enviar, la cantidad se normaliza a las reglas del exchange
+(`exchange_rules.py`): step, mínimo, máximo y notional mínimo. Un cambio de
+`CCXT_EXCHANGE` no requiere tocar código, solo claves y límites. Detalle:
+[`docs/multi-exchange.md`](multi-exchange.md).
+
 ### Alpaca MCP (ejecución acciones y ETF)
 
 Servidor oficial de Alpaca (`uvx alpaca-mcp-server`). Paper por defecto con

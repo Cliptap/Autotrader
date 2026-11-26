@@ -237,9 +237,23 @@ ejecución y, si no, integrar un cliente on-chain con límites propios.
 
 ### 4.2 Multi-exchange
 
-`CCXT_EXCHANGE` ya permite cambiar de exchange, pero los límites y símbolos
-están calibrados para Binance. Falta una capa de normalización de mínimos,
-steps y fees por exchange.
+**Estado: implementado** (ver [`multi-exchange.md`](multi-exchange.md)).
+
+- `exchange_rules.py` deriva límites, step, tick y fees del mercado que devuelve
+  CCXT, sin tablas hardcodeadas.
+- `scripts/exchange_profile.py` inspecciona un exchange y valida una orden antes
+  de enviarla.
+- El motor de riesgo normaliza la cantidad antes de cerrar y falla con un error
+  permanente (sin reintentos inútiles) si el venue no acepta el tamaño.
+- `preflight.py` verifica el reloj contra el exchange configurado, no contra
+  Binance fijo.
+- 19 tests de la capa de normalización + 1 del camino de error permanente.
+
+**Pendiente.**
+
+- [ ] inyectar `taker_fee`/`maker_fee` del mercado en el backtester
+- [ ] soportar swap/futuros (cierre con orden opuesta, margen, liquidación)
+- [ ] matriz de humo por exchange contra su testnet
 
 ### 4.3 Alertas de mercado en tiempo real
 

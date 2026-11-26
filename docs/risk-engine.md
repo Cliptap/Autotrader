@@ -224,5 +224,6 @@ bloqueo de venues live, dry-run, huérfanos y persistencia.
 | `blocked: live venue sin RISK_ENGINE_LIVE=true` | Falta el armado | Revisar la posición y armar conscientemente |
 | `close order not found, retrying` | Timeout o id inválido | Esperar el ciclo siguiente; verificar en el exchange |
 | `failed` | Tres rechazos | Cerrar a mano y revisar el motivo en `risk-log.jsonl` |
+| `close_failed_permanent` | El venue rechaza la cantidad (mínimo o step) | Corregir el plan; ver [`multi-exchange.md`](multi-exchange.md) |
 | `orphan` | La posición ya no existe | Confirmar en el broker y limpiar el plan |
 | `price_error` | Red o símbolo inválido | Verificar conectividad y formato `BTC/USDT` |
