@@ -1,0 +1,29 @@
+# ── Secrets and local state ─────────────────────────────
+.env
+.env.*
+!.env.example
+secrets/
+mcp/ccxt/.env
+state/
+alerts.md
+collector_state.json
+*.log
+
+# ── Agent runtime data ──────────────────────────────────
+.opencode/knowledge/market-data/
+.opencode/knowledge/trade-log/
+.opencode/node_modules/
+
+# ── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# ── Editors / OS ────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

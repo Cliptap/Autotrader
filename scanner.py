@@ -1,31 +1,41 @@
 ﻿"""
-cliptap Scanner — Vigilante ligero 24/7
+Autotrader scanner — 24/7 signal watcher
 
-Solo ESCANEA y NOTIFICA. No ejecuta trades.
-Corre en Railway 24/7, notifica al celular vía ntfy.sh (push nativo).
+Only SCANS and NOTIFIES. Never executes trades.
+Runs on GitHub Actions every 5 minutes (or locally in a loop) and pushes
+alerts to your phone through ntfy.sh.
 
 Pipeline:
-  Scanner detecta ≥2 agentes comprando → ntfy.sh → push al celu
-  → Abrís OpenCode → Analizamos juntos → Ejecutamos trade
+  Scanner detects >= N followed agents buying -> ntfy.sh push
+  -> open OpenCode -> research together -> execute (paper first)
 
 Setup:
-  1. Instalá ntfy app en el celu (https://ntfy.sh)
-  2. Suscribite al topic: cliptap-alerts
+  1. Install the ntfy app (https://ntfy.sh) and subscribe to a topic
+  2. Set CLIPTAP_AI_TOKEN and CLIPTAP_NTFY_TOPIC
   3. python scanner.py
 """
 
-import json
 import os
-import sys
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
 
+from env import load_env
+
+load_env()
+
 # ─── CONFIG ───────────────────────────────────────────
 BASE_URL = "https://ai4trade.ai/api"
-TOKEN = os.getenv("CLIPTAP_AI_TOKEN", "JPdLH26cs4tg-7n1NSZBkzIpe-sI0d0MFa0HYjNXpt8")
+TOKEN = os.getenv("CLIPTAP_AI_TOKEN", "").strip()
+if not TOKEN:
+    raise SystemExit(
+        "CLIPTAP_AI_TOKEN no configurado.\n"
+        "Definilo como variable de entorno o en .env (ver config/collector.env.example).\n"
+        "Nunca embebas el token en el codigo."
+    )
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -73,7 +83,7 @@ def fetch(url, method="GET", body=None):
              else requests.post(url, headers=HEADERS, json=body, timeout=15))
         r.raise_for_status()
         return r.json()
-    except:
+    except Exception:
         return None
 
 def log_alert(entry):
@@ -98,7 +108,7 @@ def is_us_market_open():
 
 # ─── ESCANEO ──────────────────────────────────────────
 def scan():
-    opportunities = []
+    alerts_sent = 0
 
     # Macro
     macro = fetch(f"{BASE_URL}/market-intel/macro-signals")
@@ -144,6 +154,7 @@ def scan():
                 f"Precio: ${price}\nAgentes: {agents_str}\n{'📊 Macro bullish' if macro_bullish else ''}",
                 priority,
             )
+            alerts_sent += 1
 
     # Feed global: detectar frenesíes de compra
     feed = fetch(f"{BASE_URL}/signals/feed?limit=20&sort=new&message_type=operation")
@@ -164,9 +175,10 @@ def scan():
             if counts["buy"] >= GLOBAL_BUY_FRENZY:
                 log_alert(f"[FRENESI] {sym} — {counts['buy']} agentes del feed comprando!")
                 push(f"FRENESI COMPRA {sym}", f"{counts['buy']} agentes comprando en el feed global", "high")
+                alerts_sent += 1
 
-    if not opportunities:
-        print(f"[{datetime.now(timezone.utc).strftime('%H:%M')}] Sin señales crypto claras")
+    if alerts_sent == 0:
+        print(f"[{datetime.now(timezone.utc).strftime('%H:%M')}] Sin señales claras")
 
     # ── Stocks (solo durante market hours + alta convicción) ──
     if is_us_market_open():
@@ -179,7 +191,6 @@ def scan():
                 for sym in TRACKED_STOCKS:
                     if f"{sym}: **BUY**" in content:
                         # Extraer score
-                        import re
                         m = re.search(rf"{sym}:\s+\*\*BUY\*\*\s+\(Score:\s+([\d.]+)", content)
                         score = float(m.group(1)) if m else 0
                         # Extraer comunidad
@@ -192,6 +203,9 @@ def scan():
                             msg = f"{sym} @ ${price} — raftapart score {score}, {community}B comunidad"
                             log_alert(f"📈 STOCK {msg}")
                             push(f"📈 {sym} BUY", f"Score: {score}\nComunidad: {community}B\nPrecio: ${price}", "high")
+                            alerts_sent += 1
+
+    return alerts_sent
 
 # ─── MAIN ─────────────────────────────────────────────
 def main():
@@ -199,13 +213,13 @@ def main():
 
     if not in_github:
         print("=" * 55)
-        print("  cliptap Scanner — ntfy.sh → tu celular")
+        print("  Autotrader scanner — ntfy.sh")
         print(f"  Topic: {NTFY_TOPIC}")
         print(f"  {len(FOLLOWED_AGENTS)} agentes | crypto: {len(TRACKED_CRYPTO)} stocks: {len(TRACKED_STOCKS)} | cada {SCAN_INTERVAL}s")
         print(f"  Compra: >= {MIN_BUY_CONSENSUS} agentes | Stocks: score >= {STOCK_MIN_SCORE}")
         print("=" * 55)
         print()
-        push("cliptap Scanner iniciado", "Vigilando oportunidades de trading...")
+        push("Autotrader scanner iniciado", "Vigilando oportunidades de trading...")
 
     if in_github:
         # GitHub Actions: ejecutar una vez y salir
