@@ -104,6 +104,7 @@ cuenta.
 | `CLIPTAP_AI_TOKEN` | Sí | — | scanner, collector, scripts |
 | `CLIPTAP_AGENT_ID` | No | `0` | collector |
 | `CLIPTAP_NTFY_TOPIC` | Sí | `cliptap-alerts` | scanner |
+| `ALERT_COOLDOWN_MIN` | No | `60` | scanner |
 | `ALPACA_API_KEY` | Para acciones | — | MCP de Alpaca |
 | `ALPACA_SECRET_KEY` | Para acciones | — | MCP de Alpaca |
 | `ALPACA_PAPER_TRADE` | No | `true` | MCP de Alpaca |
@@ -281,7 +282,21 @@ Detalle: [`docs/metrics.md`](metrics.md).
 
 ---
 
-## 11. Verificar
+## 11. Retención de snapshots
+
+Los snapshots crudos crecen sin límite. Compactarlos conserva precios y conteos
+de señales en resolución horaria y diaria:
+
+```bash
+python scripts/retention.py           # dry-run: muestra el plan
+python scripts/retention.py --apply   # ejecuta
+```
+
+Programalo mensualmente. Detalle: [`docs/retention.md`](retention.md).
+
+---
+
+## 12. Verificar
 
 ```bash
 python scripts/preflight.py
@@ -325,5 +340,7 @@ Debe devolver posiciones, régimen de mercado y candidatos, sin ejecutar nada.
 - [ ] el dashboard se regenera y muestra posiciones reales
 - [ ] `python scripts/reconcile.py` no reporta errores
 - [ ] `python scripts/backtest.py` corre sobre los snapshots disponibles
+- [ ] `python scripts/retention.py` informa un plan coherente
+- [ ] `alert_state.json` no aparece en `git status`
 - [ ] `.env`, `mcp/ccxt/.env` y `secrets/` no aparecen en `git status`
 - [ ] `/trading-scan` corre de punta a punta sin ejecutar órdenes

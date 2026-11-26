@@ -11,7 +11,7 @@ Actions cada 5 minutos o localmente en loop.
 | Frenesí del feed | ≥ N compras del mismo activo en el feed global | `GLOBAL_BUY_FRENZY=5` |
 | Macro alcista | `bullish_count` del macro intel ≥ N | `MACRO_BULLISH_THRESHOLD=3` |
 | Acción de alta convicción | Score y comunidad de un agente de referencia | `STOCK_MIN_SCORE=8`, `STOCK_MIN_COMMUNITY=5` |
-| Horario de acciones | Solo 9:30–16:00 ET, lunes a viernes | — |
+| Horario de acciones | Solo 9:30–16:00 ET, lunes a viernes | Zona `America/New_York`, DST incluido |
 
 Los umbrales son constantes al inicio de `scanner.py`. Cambiarlos es una decisión
 de estrategia: si se sube el consenso requerido, hay menos alertas y más
@@ -29,9 +29,26 @@ calidad; si se baja, pasa lo contrario.
 | --- | --- | --- |
 | `CLIPTAP_AI_TOKEN` | Sí | — |
 | `CLIPTAP_NTFY_TOPIC` | No | `cliptap-alerts` |
+| `ALERT_COOLDOWN_MIN` | No | `60` |
 
 El scanner falla al arrancar si falta el token. No hay token embebido: un token
 en el código es un token filtrado.
+
+## Deduplicación y cooldown
+
+Si el consenso persiste, el scanner no vuelve a sonar cada 5 minutos:
+
+- el estado vive en `alert_state.json` (clave `consenso|frenesí|stock + símbolo`);
+- una alerta no se repite hasta que pasen `ALERT_COOLDOWN_MIN` minutos;
+- cuando el consenso desaparece, se envía **un** aviso de cierre
+  (`Consenso terminado: BTC`) y se limpia el estado del símbolo;
+- el cooldown es por clave: un frenesí y un consenso del mismo activo son
+  alertas distintas.
+
+En GitHub Actions el runner es efímero, así que el workflow restaura y guarda
+`alert_state.json` con `actions/cache`. Sin eso, cada ejecución empezaría sin
+memoria y el cooldown no serviría de nada. También hay `concurrency` para que no
+corran dos scans a la vez.
 
 ## Despliegue en GitHub Actions
 
@@ -52,6 +69,10 @@ Secretos necesarios en Settings → Secrets → Actions:
 Cada ejecución dura menos de un minuto. GitHub puede demorar el cron algunos
 minutos en horas pico; para trading de consenso no es crítico, para ejecución
 sí, y por eso la ejecución no vive acá.
+
+El workflow usa `actions/cache` para `alert_state.json`. La primera corrida
+después de un cambio de repo arranca sin estado: no pasa nada, solo puede
+alertar una vez de más.
 
 ## Notificaciones
 

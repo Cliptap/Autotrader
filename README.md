@@ -132,12 +132,14 @@ Guía completa: [`docs/setup.md`](docs/setup.md).
 ├── scanner.py                 # vigilancia 24/7: consenso de agentes → push
 ├── collector.py               # snapshots de mercado + heartbeat (system tray)
 ├── risk_engine.py             # ejecuta los stops aunque no haya sesión abierta
+├── sanitize.py                # redacta credenciales antes de persistir datos
 ├── scripts/
 │   ├── preflight.py           # valida entorno, claves y conectividad
 │   ├── position_size.py       # tamaño de posición según riesgo
 │   ├── metrics.py             # journal, métricas y dashboard
 │   ├── reconcile.py           # paper ↔ venue ↔ journal, sin corregir nada
-│   └── backtest.py            # replay de snapshots con la estrategia
+│   ├── backtest.py            # replay de snapshots con la estrategia
+│   └── retention.py           # compacta snapshots viejos
 ├── tests/                     # tests del motor de riesgo y de métricas
 ├── mcp/ccxt/                  # MCP server de ejecución crypto (CCXT)
 ├── .opencode/
@@ -192,7 +194,8 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 | [`docs/backtest.md`](docs/backtest.md) | Replay de snapshots y sensibilidad de umbrales |
 | [`docs/copytrading.md`](docs/copytrading.md) | Evaluar agentes, copiar y replicar |
 | [`docs/operations.md`](docs/operations.md) | Rutina diaria, revisión y respuesta a incidentes |
-| [`docs/scanner.md`](docs/scanner.md) | Lógica del scanner y despliegue en Actions |
+| [`docs/scanner.md`](docs/scanner.md) | Lógica del scanner, cooldown y despliegue en Actions |
+| [`docs/retention.md`](docs/retention.md) | Compactación de snapshots sin perder lo necesario |
 | [`docs/troubleshooting.md`](docs/troubleshooting.md) | Síntomas, causas y arreglos |
 | [`docs/roadmap.md`](docs/roadmap.md) | Qué falta y cómo construirlo |
 
@@ -208,5 +211,7 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 - Journal en CSV con métricas, veredicto de promoción y dashboard generado.
 - Reconciliación de planes, paper, venue y journal.
 - Backtester sobre snapshots con fees, slippage y barrido de umbrales.
+- Scanner con dedup, cooldown y aviso de fin de consenso.
+- Retención de snapshots en tres niveles de resolución.
 - Pendiente: ejecución multi-exchange y Polymarket. Ver
   [`docs/roadmap.md`](docs/roadmap.md).

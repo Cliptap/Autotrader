@@ -58,6 +58,8 @@ problemas de redondeo de decimales. Validar compuertas con limit.
 | No llegan notificaciones | Topic distinto o app sin suscripción | Probar con `curl -d test https://ntfy.sh/<topic>` |
 | Corre pero nunca alerta | Umbrales altos o agentes inactivos | Revisar `MIN_BUY_CONSENSUS` y el feed |
 | `401` en todas las llamadas | Token inválido o rotado | Regenerar y actualizar el secreto |
+| Alertas repetidas cada 5 min | Estado de dedup perdido o cooldown 0 | Revisar `alert_state.json` y `ALERT_COOLDOWN_MIN` |
+| Alerta que no se repite aunque el consenso sigue | Cooldown activo | Esperar; es el comportamiento esperado |
 | Actions no se ejecuta | Cron deshabilitado por inactividad del repo | Ejecutar `workflow_dispatch`; en repos inactivos GitHub pausa los schedules |
 
 ## Collector

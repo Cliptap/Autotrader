@@ -56,6 +56,7 @@
 - Recalibrar pesos (técnico, macro, consenso, sentimiento).
 - Revisar la lista de agentes seguidos: dar de baja a los inactivos y a los que
   cambiaron de estilo.
+- Compactar snapshots: `python scripts/retention.py --apply`.
 - Actualizar el roadmap si algo quedó obsoleto.
 - Decidir si se promueve o degrada de modo (ver `trading-modes.md`).
 

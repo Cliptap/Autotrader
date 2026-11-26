@@ -80,7 +80,12 @@ cola hasta la apertura.
 - régimen macro alcista (`MACRO_BULLISH_THRESHOLD`, default 3),
 - compras de alta convicción en acciones (score y comunidad mínimos).
 
-No ejecuta: notifica por ntfy.sh y escribe `alerts.md`.
+No ejecuta: notifica por ntfy.sh y escribe `alerts.md`. Mantiene un estado de
+dedup (`alert_state.json`) para no repetir la misma alerta dentro del cooldown
+y avisar cuando el consenso se rompe.
+
+Los snapshots que produce el collector se compactan con
+`scripts/retention.py`: crudos 7 días, horarios 90, diarios para siempre.
 
 ### Collector (memoria de mercado)
 

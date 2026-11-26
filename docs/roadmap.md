@@ -158,37 +158,73 @@ validar reglas.
 **Problema.** Si el consenso persiste, el scanner alerta cada 5 minutos. El
 operador termina silenciando el canal.
 
-**Especificación.** Estado en `alert_state.json` con `(símbolo, lado)` y
-timestamp; suprimir repeticiones dentro de `ALERT_COOLDOWN` (default 60 min) y
-avisar cuando el consenso se rompe.
+**Estado: implementado** (ver [`scanner.md`](scanner.md#deduplicación-y-cooldown)).
+
+- Estado por clave en `alert_state.json`, persistido con escritura atómica.
+- Cooldown configurable con `ALERT_COOLDOWN_MIN` (default 60).
+- Aviso único de "consenso terminado" cuando la señal desaparece.
+- En GitHub Actions el estado viaja por `actions/cache` y hay `concurrency`
+  para evitar scans solapados.
+- 21 tests: parsing de señales, umbrales, horario de mercado con DST y dedup.
+
+**Pendiente.**
+
+- [ ] agrupar varias alertas del mismo scan en una sola notificación
+- [ ] permitir silenciar un símbolo por más tiempo (`snooze`)
 
 ### 3.2 Retención de snapshots
 
 **Problema.** Un snapshot cada 5 minutos crece sin límite.
 
-**Especificación.** Script de compactación: mantener snapshots crudos 7 días,
-resumen horario 90 días, resumen diario indefinido.
+**Estado: implementado** en `scripts/retention.py` (ver
+[`retention.md`](retention.md)).
+
+- Crudos 7 días, horarios 90 días, diarios para siempre.
+- Cada resumen conserva OHLC por símbolo y conteo de señales buy/sell.
+- Dry-run por defecto; `--apply` para ejecutar.
+- Idempotente y con escritura atómica; 11 tests.
+
+**Pendiente.**
+
+- [ ] que el backtester pueda leer resúmenes horarios (hoy necesita crudos)
+- [ ] comprimir los diarios en un único parquet/CSV anual
 
 ### 3.3 Tests y CI
 
 **Problema.** `scanner.py` y `collector.py` no tienen tests; los cambios se
 validan en producción.
 
-**Especificación.**
+**Estado: implementado.**
 
-- Tests de las funciones puras: normalización de señales, umbrales, detección
-  de horario de mercado, cálculo de tamaño.
-- CI en cada push: `compileall`, `ruff`, `pytest`.
-- Fixtures con respuestas de API grabadas (sin red en CI).
+- 112 tests en total (riesgo, métricas, reconciliación, backtest, scanner,
+  retención y sanitización).
+- `scanner.py` se dividió en funciones puras (`collect_*`, `evaluate_*`,
+  `dispatch`) para poder probarlas sin red.
+- CI en cada push: `compileall`, `ruff` (errores críticos) y `pytest`.
+- Los tests no tocan red ni exchanges.
+
+**Pendiente.**
+
+- [ ] fixtures con respuestas reales de API grabadas
+- [ ] cobertura mínima exigida en CI
 
 ### 3.4 Gestión de secretos
 
 **Problema.** Variables de entorno y `.env` funcionan, pero rotar y auditar es
 manual.
 
-**Especificación.** Integrar un gestor (1Password CLI, Doppler o SOPS) y hacer
-que `preflight.py` valide que los secretos provienen del gestor. Nunca
-commitear valores.
+**Estado: parcial.**
+
+- `preflight.py` verifica que `.env` no esté versionado (`git ls-files`).
+- `sanitize.py` redacta credenciales antes de persistir respuestas de API.
+- Falta integrar un gestor (1Password CLI, Doppler o SOPS) y validar en
+  `preflight` que los valores provienen de ahí.
+
+**Pendiente.**
+
+- [ ] elegir gestor e integrarlo en el arranque
+- [ ] rotación documentada con fecha y responsable
+- [ ] alerta si una credencial aparece en un archivo versionado
 
 ---
 
