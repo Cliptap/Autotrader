@@ -141,6 +141,22 @@ def fetch(url, method="GET", body=None, timeout=None):
     except Exception as e:
         return {"error": str(e), "url": url}
 
+# ─── SNAPSHOTS ────────────────────────────────────────
+SENSITIVE_KEYS = {"token", "api_key", "apikey", "secret", "password"}
+
+
+def scrub_secrets(value):
+    """Quita credenciales antes de persistir datos de la API en disco."""
+    if isinstance(value, dict):
+        return {
+            key: "<redacted>" if str(key).lower() in SENSITIVE_KEYS else scrub_secrets(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [scrub_secrets(item) for item in value]
+    return value
+
+
 def collect_snapshot():
     """Recolecta un snapshot completo del mercado."""
     ts = datetime.now(timezone.utc)
@@ -150,7 +166,7 @@ def collect_snapshot():
         "macro_signals": fetch(f"{BASE_URL}/market-intel/macro-signals"),
         "signal_feed": fetch(f"{BASE_URL}/signals/feed?limit=15&sort=new"),
         "my_positions": fetch(f"{BASE_URL}/positions"),
-        "agent_info": fetch(f"{BASE_URL}/claw/agents/me"),
+        "agent_info": scrub_secrets(fetch(f"{BASE_URL}/claw/agents/me")),
         "prices": {},
     }
     for symbol, market in TRACKED_SYMBOLS:
