@@ -19,7 +19,7 @@ por qué importan y cómo se cierran.
 | Motor de riesgo que ejecute stops | Listo (`risk_engine.py` + tests) |
 | Métricas automáticas y journal | Listo (`scripts/metrics.py` + tests) |
 | Backtester | **Falta** |
-| Reconciliación paper ↔ real | **Falta** |
+| Reconciliación paper ↔ real | Listo (`scripts/reconcile.py` + tests) |
 | Kill switch global | Parcial: `preflight.py` detecta `state/HALT` |
 
 ---
@@ -77,18 +77,24 @@ y una pérdida arbitraria.
 **Problema.** AI-Trader, el exchange y el journal pueden divergir y nadie lo
 detecta.
 
-**Especificación.**
+**Estado: implementado** en `scripts/reconcile.py` (ver
+[`reconciliation.md`](reconciliation.md)).
 
-- Script `scripts/reconcile.py` que compara tres fuentes: posiciones paper,
-  posiciones reales y journal.
-- Reporta faltantes, sobrantes y cantidades distintas.
-- Salida en Markdown para pegar en el handoff.
-- Nunca corrige automáticamente: propone y espera confirmación.
+- Compara cuatro libros: planes, paper, venue y journal.
+- Reporta `plan_missing_at_venue`, `plan_qty_short`, `plan_qty_extra`,
+  `plan_qty_unknown`, `venue_unmanaged`, `paper_without_plan`,
+  `plan_without_paper` y `journal_missing`.
+- Salida en texto, Markdown (para el handoff) y JSON.
+- Nunca corrige: propone y espera decisión humana.
+- 18 tests unitarios sobre cada tipo de diferencia y el render.
 
-**Criterios de aceptación.**
+**Pendiente dentro del mismo ítem.**
 
-- [ ] una posición abierta solo en el exchange aparece como `unmanaged`
-- [ ] una posición cerrada sin registro en el journal aparece como `missing_exit`
+- [ ] detectar órdenes en vuelo (`new` / `partially_filled`) para evitar
+      falsos positivos entre dos corridas
+- [ ] comparar también contra `risk-log.jsonl` para auditar cierres
+- [ ] programarlo junto al motor (check diario) y publicar el resultado en el
+      dashboard
 
 ---
 

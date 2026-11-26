@@ -135,7 +135,8 @@ Guía completa: [`docs/setup.md`](docs/setup.md).
 ├── scripts/
 │   ├── preflight.py           # valida entorno, claves y conectividad
 │   ├── position_size.py       # tamaño de posición según riesgo
-│   └── metrics.py             # journal, métricas y dashboard
+│   ├── metrics.py             # journal, métricas y dashboard
+│   └── reconcile.py           # paper ↔ venue ↔ journal, sin corregir nada
 ├── tests/                     # tests del motor de riesgo y de métricas
 ├── mcp/ccxt/                  # MCP server de ejecución crypto (CCXT)
 ├── .opencode/
@@ -186,6 +187,7 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 | [`docs/risk-policy.md`](docs/risk-policy.md) | Sizing, stops, límites y kill switch |
 | [`docs/risk-engine.md`](docs/risk-engine.md) | Motor que ejecuta los stops sin sesión abierta |
 | [`docs/metrics.md`](docs/metrics.md) | Journal CSV, métricas y dashboard generado |
+| [`docs/reconciliation.md`](docs/reconciliation.md) | Contrastar planes, paper, venue y journal |
 | [`docs/copytrading.md`](docs/copytrading.md) | Evaluar agentes, copiar y replicar |
 | [`docs/operations.md`](docs/operations.md) | Rutina diaria, revisión y respuesta a incidentes |
 | [`docs/scanner.md`](docs/scanner.md) | Lógica del scanner y despliegue en Actions |
@@ -202,5 +204,5 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 - Scanner 24/7 con alertas push.
 - Motor de riesgo con stops idempotentes, tests y prueba en testnet.
 - Journal en CSV con métricas, veredicto de promoción y dashboard generado.
-- Pendiente: backtester y reconciliación paper ↔ real.
-  Ver [`docs/roadmap.md`](docs/roadmap.md).
+- Reconciliación de planes, paper, venue y journal.
+- Pendiente: backtester. Ver [`docs/roadmap.md`](docs/roadmap.md).

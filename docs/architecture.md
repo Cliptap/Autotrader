@@ -124,6 +124,14 @@ no un archivo editado a mano.
 
 Detalle: [`docs/metrics.md`](metrics.md).
 
+### Reconciliación
+
+`scripts/reconcile.py` contrasta cuatro libros —planes del motor, cuenta paper,
+venue real y journal— y reporta las diferencias sin corregirlas. Es la compuerta
+que evita operar en real sobre un estado que ya no coincide con la realidad.
+
+Detalle: [`docs/reconciliation.md`](reconciliation.md).
+
 ## Flujo de una operación
 
 ```mermaid

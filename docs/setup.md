@@ -323,5 +323,6 @@ Debe devolver posiciones, régimen de mercado y candidatos, sin ejecutar nada.
 - [ ] el motor de riesgo está programado y corriendo
 - [ ] `python scripts/metrics.py report` calcula métricas sin errores
 - [ ] el dashboard se regenera y muestra posiciones reales
+- [ ] `python scripts/reconcile.py` no reporta errores
 - [ ] `.env`, `mcp/ccxt/.env` y `secrets/` no aparecen en `git status`
 - [ ] `/trading-scan` corre de punta a punta sin ejecutar órdenes

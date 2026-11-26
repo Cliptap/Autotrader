@@ -46,6 +46,7 @@ Si una regla impide operar, no busques la excepción: no operes.
 
 Antes de enviar una orden a CCXT o Alpaca:
 
+- [ ] `python scripts/reconcile.py` no reporta errores
 - [ ] el modo está habilitado y el usuario confirmó
 - [ ] `exchange_info()` o `get_account_info()` muestran el modo esperado
 - [ ] el balance cubre la orden

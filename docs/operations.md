@@ -5,15 +5,16 @@
 ### Al abrir la sesión (10 minutos)
 
 1. `python scripts/preflight.py` — entorno y credenciales.
-2. Verificar el motor de riesgo: `python risk_engine.py check` y que el proceso
+2. `python scripts/reconcile.py` — paper, venue, planes y journal cuadran.
+3. Verificar el motor de riesgo: `python risk_engine.py check` y que el proceso
    esté vivo (Task Scheduler o systemd).
-3. Leer `.opencode/knowledge/DASHBOARD.md` y el último handoff.
-4. Comparar las predicciones de la sesión anterior con los snapshots del
+4. Leer `.opencode/knowledge/DASHBOARD.md` y el último handoff.
+5. Comparar las predicciones de la sesión anterior con los snapshots del
    collector. ¿Acertamos dirección, magnitud y timing?
-5. `/trading-scan` — posiciones, régimen, feed y candidatos.
-6. Revisar `alerts.md` del scanner: qué disparó y si la tesis original sigue en
+6. `/trading-scan` — posiciones, régimen, feed y candidatos.
+7. Revisar `alerts.md` del scanner: qué disparó y si la tesis original sigue en
    pie.
-7. Decidir. Si no hay señal clara, no hay operación. No operar también es una
+8. Decidir. Si no hay señal clara, no hay operación. No operar también es una
    decisión válida.
 
 ### Durante el día
@@ -98,6 +99,16 @@ Sin tesis, stop, objetivo y lección no es un journal: es una lista de precios.
 1. Verificar estado del servicio antes de asumir que el problema es local.
 2. No cancelar órdenes a ciegas: pueden estar ejecutadas.
 3. Esperar confirmación y reconciliar posiciones al volver.
+```
+
+### Descuadre entre paper y real
+
+```text
+1. python scripts/reconcile.py --markdown y leer el detalle.
+2. No "corregir" el journal para que cierre: primero verificar en el venue.
+3. Si la posición real no existe, cancelar el plan con motivo.
+4. Si existe y no estaba registrada, abrir plan con stop o cerrar.
+5. Registrar la resolución en el handoff.
 ```
 
 ### Motor de riesgo detenido
