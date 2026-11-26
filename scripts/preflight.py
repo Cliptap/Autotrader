@@ -148,6 +148,40 @@ def check_secrets() -> None:
         record(PASS, "MAX_ORDER_VALUE_USD", f"{max_order:.0f} USD")
 
 
+def check_secret_hygiene() -> None:
+    """Make sure local secret files are not tracked by git."""
+    import subprocess
+
+    candidates = [ROOT / ".env", ROOT / "mcp" / "ccxt" / ".env"]
+    existing = [path for path in candidates if path.exists()]
+    if not existing:
+        record(WARN, "secret hygiene", "no hay .env locales todavía")
+        return
+
+    tracked: list[str] = []
+    for path in existing:
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(ROOT), "ls-files", "--error-unmatch", str(path)],
+                capture_output=True,
+                text=True,
+            )
+        except (OSError, subprocess.SubprocessError):
+            record(WARN, "secret hygiene", "git no disponible; no se pudo verificar")
+            return
+        if result.returncode == 0:
+            tracked.append(str(path.relative_to(ROOT)))
+
+    if tracked:
+        record(
+            FAIL,
+            "secret hygiene",
+            "archivos de secretos versionados: " + ", ".join(tracked),
+        )
+    else:
+        record(PASS, "secret hygiene", "secretos locales fuera de git")
+
+
 def check_risk() -> None:
     """Validate the stop plans the risk engine depends on."""
     try:
@@ -253,6 +287,7 @@ def main() -> int:
     check_files()
     check_dependencies()
     check_secrets()
+    check_secret_hygiene()
     check_risk()
     if not args.offline:
         check_network()
