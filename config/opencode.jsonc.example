@@ -10,6 +10,7 @@
 
   "instructions": [
     ".opencode/rules/trading-rules.md",
+    // Generado por: python scripts/metrics.py dashboard
     ".opencode/knowledge/DASHBOARD.md",
     ".opencode/knowledge/SESSION_HANDOFF.md"
   ],

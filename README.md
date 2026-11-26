@@ -134,8 +134,9 @@ Guía completa: [`docs/setup.md`](docs/setup.md).
 ├── risk_engine.py             # ejecuta los stops aunque no haya sesión abierta
 ├── scripts/
 │   ├── preflight.py           # valida entorno, claves y conectividad
-│   └── position_size.py       # tamaño de posición según riesgo
-├── tests/                     # tests del motor de riesgo
+│   ├── position_size.py       # tamaño de posición según riesgo
+│   └── metrics.py             # journal, métricas y dashboard
+├── tests/                     # tests del motor de riesgo y de métricas
 ├── mcp/ccxt/                  # MCP server de ejecución crypto (CCXT)
 ├── .opencode/
 │   ├── rules/trading-rules.md # política de riesgo que el agente debe seguir
@@ -184,6 +185,7 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 | [`docs/trading-modes.md`](docs/trading-modes.md) | Paper → sandbox → live, criterios de promoción |
 | [`docs/risk-policy.md`](docs/risk-policy.md) | Sizing, stops, límites y kill switch |
 | [`docs/risk-engine.md`](docs/risk-engine.md) | Motor que ejecuta los stops sin sesión abierta |
+| [`docs/metrics.md`](docs/metrics.md) | Journal CSV, métricas y dashboard generado |
 | [`docs/copytrading.md`](docs/copytrading.md) | Evaluar agentes, copiar y replicar |
 | [`docs/operations.md`](docs/operations.md) | Rutina diaria, revisión y respuesta a incidentes |
 | [`docs/scanner.md`](docs/scanner.md) | Lógica del scanner y despliegue en Actions |
@@ -199,5 +201,6 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 - Ejecución de acciones en Alpaca paper.
 - Scanner 24/7 con alertas push.
 - Motor de riesgo con stops idempotentes, tests y prueba en testnet.
-- Pendiente: backtester, métricas automáticas y reconciliación paper ↔ real.
+- Journal en CSV con métricas, veredicto de promoción y dashboard generado.
+- Pendiente: backtester y reconciliación paper ↔ real.
   Ver [`docs/roadmap.md`](docs/roadmap.md).

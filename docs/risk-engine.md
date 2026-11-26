@@ -204,8 +204,9 @@ el precio garantizado.
   Alpaca se podría cerrar la posición completa; está en el roadmap.
 - **Un plan por símbolo y venue**: dos estrategias sobre el mismo activo
   requieren consolidar el plan a mano.
-- **Sin journal automático**: el motor escribe `risk-log.jsonl`, pero no
-  actualiza el dashboard. Eso llega con `scripts/metrics.py`.
+- **Sin journal automático**: el motor escribe `risk-log.jsonl`, pero no agrega
+  filas a `state/trades.csv`. El dashboard se regenera con
+  `scripts/metrics.py`; cerrar el plan todavía no actualiza el journal.
 
 ## Tests
 

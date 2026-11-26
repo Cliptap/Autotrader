@@ -48,7 +48,9 @@ confirms, mirrors the operation on the broker.
    ```
 
    Without a plan there is no automatic stop. Never skip this step.
-8. Register the operation in `.opencode/knowledge/DASHBOARD.md` and the journal.
+8. Append the closed trade to `state/trades.csv` (one row per closing) and
+   regenerate the dashboard:
+   `python scripts/metrics.py dashboard --out .opencode/knowledge/DASHBOARD.md`
 9. If a real session was armed, `disarm_live_session()` when done.
 
 ## Parameters

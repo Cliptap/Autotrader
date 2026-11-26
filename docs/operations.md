@@ -28,13 +28,20 @@
 
 ### Al cerrar la sesión (5 minutos)
 
-1. Actualizar `.opencode/knowledge/DASHBOARD.md` con posiciones y P&L.
+1. Regenerar el dashboard y leer el veredicto:
+
+   ```bash
+   python scripts/metrics.py dashboard --out .opencode/knowledge/DASHBOARD.md
+   python scripts/metrics.py report
+   ```
+
 2. Escribir el handoff: qué se hizo, qué quedó abierto, qué mirar mañana.
 3. `disarm_live_session()` si se operó en real.
 4. Si hubo una lección no obvia, guardarla en `knowledge/`.
 
 ## Revisión semanal
 
+- Correr `python scripts/metrics.py report` y comparar contra la semana previa.
 - Win rate, profit factor, drawdown y cantidad de operaciones cerradas.
 - Comparación contra el benchmark (BTC para crypto, SPY para acciones).
 - Qué regla se rompió y por qué.

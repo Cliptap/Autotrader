@@ -263,7 +263,25 @@ Abrir posiciones reales sin el motor corriendo es operar sin stop.
 
 ---
 
-## 10. Verificar
+## 10. Journal y métricas
+
+Crear el journal y generar el primer dashboard:
+
+```bash
+python scripts/metrics.py init
+python scripts/metrics.py report
+python scripts/metrics.py dashboard --out .opencode/knowledge/DASHBOARD.md
+```
+
+A partir de ahí, cada operación cerrada agrega una fila a `state/trades.csv`
+(formato en `config/trades.example.csv`). El dashboard es un artefacto generado
+y está en `.gitignore`.
+
+Detalle: [`docs/metrics.md`](metrics.md).
+
+---
+
+## 11. Verificar
 
 ```bash
 python scripts/preflight.py
@@ -303,5 +321,7 @@ Debe devolver posiciones, régimen de mercado y candidatos, sin ejecutar nada.
 - [ ] `python -m pytest -q` pasa
 - [ ] `python risk_engine.py check` sin planes inválidos
 - [ ] el motor de riesgo está programado y corriendo
+- [ ] `python scripts/metrics.py report` calcula métricas sin errores
+- [ ] el dashboard se regenera y muestra posiciones reales
 - [ ] `.env`, `mcp/ccxt/.env` y `secrets/` no aparecen en `git status`
 - [ ] `/trading-scan` corre de punta a punta sin ejecutar órdenes

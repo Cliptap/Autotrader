@@ -17,7 +17,7 @@ por qué importan y cómo se cierran.
 | Cálculo de tamaño de posición | Listo (`scripts/position_size.py`) |
 | Preflight de entorno | Listo (`scripts/preflight.py`) |
 | Motor de riesgo que ejecute stops | Listo (`risk_engine.py` + tests) |
-| Métricas automáticas y journal | **Falta** |
+| Métricas automáticas y journal | Listo (`scripts/metrics.py` + tests) |
 | Backtester | **Falta** |
 | Reconciliación paper ↔ real | **Falta** |
 | Kill switch global | Parcial: `preflight.py` detecta `state/HALT` |
@@ -99,19 +99,25 @@ detecta.
 **Problema.** Sin métricas calculadas, la decisión de promover de modo se toma
 de memoria.
 
-**Especificación.**
+**Estado: implementado** en `scripts/metrics.py` (ver
+[`metrics.md`](metrics.md)).
 
-- `scripts/metrics.py` lee el journal (`knowledge/trade-log/*.md`) o un CSV.
-- Calcula: operaciones cerradas, win rate, profit factor, Sharpe, max drawdown,
-  R medio, duración media.
-- Compara contra los umbrales de `docs/trading-modes.md` y emite un veredicto:
-  `paper`, `promote`, `degrade`.
-- Genera `DASHBOARD.md` a partir de las posiciones de la API.
+- Journal canónico en `state/trades.csv` (una fila por operación cerrada).
+- Calcula: cerradas, win rate, profit factor, Sharpe, max drawdown, R medio,
+  duración media, expectancy.
+- Verifica los umbrales de `docs/trading-modes.md` y emite
+  `promote` / `hold` / `degrade` / `insufficient_sample`.
+- Genera `.opencode/knowledge/DASHBOARD.md` con cuenta, posiciones valorizadas,
+  métricas y planes de riesgo activos.
+- Modo `--offline` para operar sin red; `--json` para consumo automático.
+- 19 tests unitarios sobre el cálculo, los veredictos y el render.
 
-**Criterios de aceptación.**
+**Pendiente dentro del mismo ítem.**
 
-- [ ] el veredicto coincide con el cálculo manual en un set de prueba
-- [ ] el dashboard se regenera sin editar a mano
+- [ ] importar el formato markdown histórico de `knowledge/trade-log/`
+- [ ] que el motor de riesgo agregue la fila al cerrar (hoy es manual)
+- [ ] slippage real y funding como columnas separadas
+- [ ] comparación automática contra benchmark (BTC / SPY)
 
 ### 2.2 Backtester sobre snapshots
 

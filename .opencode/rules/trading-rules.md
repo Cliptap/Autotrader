@@ -98,8 +98,9 @@ cerradas lo respalden.
 
 ## Cierre de sesión
 
-1. Actualiza `.opencode/knowledge/DASHBOARD.md`.
-2. Escribe el handoff en `.opencode/knowledge/SESSION_HANDOFF.md`: qué se hizo,
+1. Regenera el dashboard: `python scripts/metrics.py dashboard --out .opencode/knowledge/DASHBOARD.md`.
+2. Lee el veredicto de `python scripts/metrics.py report`.
+3. Escribe el handoff en `.opencode/knowledge/SESSION_HANDOFF.md`: qué se hizo,
    qué quedó abierto y qué revisar en la próxima sesión.
-3. Si aprendiste algo no obvio, guárdalo en `.opencode/knowledge/`.
-4. Si operaste en real, desarma la sesión.
+4. Si aprendiste algo no obvio, guárdalo en `.opencode/knowledge/`.
+5. Si operaste en real, desarma la sesión.

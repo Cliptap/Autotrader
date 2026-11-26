@@ -147,7 +147,9 @@ Buenas prácticas:
 ## Criterios de promoción
 
 Se evalúan sobre **operaciones cerradas**, no sobre posiciones abiertas, y solo
-con journal completo (entrada, stop, objetivo, tesis, salida).
+con journal completo (entrada, stop, objetivo, tesis, salida). Las métricas se
+calculan con `python scripts/metrics.py report`, no a mano (ver
+[`metrics.md`](metrics.md)).
 
 | Métrica | Umbral | Por qué |
 | --- | --- | --- |

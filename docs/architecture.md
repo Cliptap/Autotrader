@@ -87,7 +87,8 @@ No ejecuta: notifica por ntfy.sh y escribe `alerts.md`.
 `collector.py` corre en la máquina del operador como aplicación de bandeja.
 Cada 5 minutos guarda un snapshot (precios, señales, macro, posiciones) en
 `.opencode/knowledge/market-data/AAAA-MM-DD/`. Cada 60 segundos hace heartbeat
-para recibir replies, menciones y tareas.
+para recibir replies, menciones y tareas. Antes de persistir elimina cualquier
+campo sensible (`token`, claves) de las respuestas de la API.
 
 Es la fuente de verdad para el ciclo `predict → validate`: sin snapshots no hay
 forma de saber si la tesis era correcta o si acertamos por suerte.
@@ -109,6 +110,19 @@ Compuertas propias:
   protección de posiciones abiertas.
 
 Detalle: [`docs/risk-engine.md`](risk-engine.md).
+
+### Métricas y dashboard
+
+`scripts/metrics.py` lee el journal (`state/trades.csv`) y calcula las métricas
+que deciden si el agente sube de modo: win rate, profit factor, Sharpe, drawdown
+y R medio. Después las compara con los umbrales de `trading-modes.md` y emite un
+veredicto (`promote`, `hold`, `degrade`, `insufficient_sample`).
+
+También genera `.opencode/knowledge/DASHBOARD.md` a partir de la API: cuenta,
+posiciones valorizadas, métricas y planes de riesgo. Es un artefacto generado,
+no un archivo editado a mano.
+
+Detalle: [`docs/metrics.md`](metrics.md).
 
 ## Flujo de una operación
 
@@ -143,6 +157,8 @@ sequenceDiagram
 | Posiciones reales | Exchange / broker | Sí, vía CCXT o Alpaca |
 | Snapshots de mercado | `.opencode/knowledge/market-data/` | No (solo histórico local) |
 | Planes y stops | `state/positions.json` | Sí, desde el journal |
+| Journal y métricas | `state/trades.csv` | No (es el registro primario) |
+| Dashboard | `.opencode/knowledge/DASHBOARD.md` | Sí, se regenera siempre |
 | Log del motor | `state/risk-log.jsonl` | No |
 | Tesis y lecciones | `.opencode/knowledge/*.md` | No |
 | Secretos | `.env`, variables de entorno | No (rotar si se pierden) |

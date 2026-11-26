@@ -1,5 +1,9 @@
 # Dashboard
 
+> Este archivo es una **plantilla**. El dashboard real se genera con
+> `python scripts/metrics.py dashboard --out .opencode/knowledge/DASHBOARD.md`
+> y no se edita a mano.
+
 Estado actual del agente. Se actualiza al cerrar cada sesión.
 
 ## Cuenta
