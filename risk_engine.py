@@ -233,6 +233,13 @@ class CcxtVenue:
         # Spot has no position objects: the exchange rejects an oversized sell.
         return None
 
+    def base_balance(self, symbol: str) -> float:
+        """Free balance of the base asset (BTC/USDT -> BTC), for reconciliation."""
+        base = symbol.split("/")[0].upper()
+        balance = self.exchange.fetch_balance()
+        free = (balance.get("free") or {}).get(base)
+        return float(free or 0.0)
+
     def close(self, plan: Plan, client_id: str) -> dict:
         params = {"recvWindow": 10000}
         if self.exchange_id == "binance":
@@ -313,6 +320,10 @@ class AlpacaVenue:
         if not position:
             return 0.0
         return abs(float(position.get("qty", 0)))
+
+    def positions(self) -> list[dict[str, Any]]:
+        data = self._request("GET", "/v2/positions") or []
+        return [{"symbol": item["symbol"], "qty": abs(float(item["qty"]))} for item in data]
 
     def close(self, plan: Plan, client_id: str) -> dict:
         order = self._request(
