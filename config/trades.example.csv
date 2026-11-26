@@ -1,0 +1,4 @@
+id,opened_at,closed_at,symbol,market,side,qty,entry,exit,fees,stop,target,risk_pct,thesis,notes
+t-0001,2026-11-02T09:15:00+00:00,2026-11-05T16:40:00+00:00,ETH/USDT,crypto,long,0.5,3000,3150,1.20,2900,3200,0.5,"Ruptura de rango con volumen","Cerrada en objetivo"
+t-0002,2026-11-06T14:30:00+00:00,2026-11-07T15:05:00+00:00,AAPL,us-stock,long,10,220,214,0.35,214,232,0.4,"Reversión en soporte","Stop ejecutado"
+t-0003,2026-11-10T08:00:00+00:00,2026-11-12T11:20:00+00:00,BTC/USDT,crypto,short,0.01,62000,60500,2.10,63200,60000,0.3,"Divergencia bajista en 4h","Cierre parcial en soporte"
