@@ -43,7 +43,7 @@ y una pérdida arbitraria.
   el cierre.
 - Venues live bloqueados salvo `RISK_ENGINE_LIVE=true`.
 - Log en `state/risk-log.jsonl`; tres rechazos ⇒ `failed` y revisión humana.
-- 23 tests unitarios que cubren validación, breaches, idempotencia y huérfanos.
+- 24 tests unitarios que cubren validación, breaches, idempotencia y huérfanos.
 
 **Pendiente dentro del mismo ítem.**
 
