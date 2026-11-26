@@ -109,6 +109,8 @@ cuenta.
 | `ALPACA_PAPER_TRADE` | No | `true` | MCP de Alpaca |
 | `ALPACA_TOOLSETS` | No | 7 toolsets | MCP de Alpaca |
 | `CCXT_*` | Para crypto | ver abajo | MCP de CCXT (lee `mcp/ccxt/.env`) |
+| `RISK_ENGINE_LIVE` | No | `false` | `risk_engine.py` (venues live) |
+| `RISK_POLL_INTERVAL` | No | `60` | `risk_engine.py` |
 
 Configurarlas de forma persistente:
 
@@ -244,7 +246,24 @@ Variables: `CLIPTAP_AI_TOKEN` (obligatoria), `CLIPTAP_AGENT_ID`,
 
 ---
 
-## 9. Verificar
+## 9. Motor de riesgo
+
+El motor cierra posiciones cuando el stop se perfora, aunque no haya sesión
+abierta. Se instala como servicio para que se reinicie solo.
+
+```bash
+python risk_engine.py check
+python risk_engine.py run --once --dry-run
+```
+
+Programarlo al iniciar el sistema (Task Scheduler en Windows, systemd en Linux)
+está detallado en [`risk-engine.md`](risk-engine.md#programarlo).
+
+Abrir posiciones reales sin el motor corriendo es operar sin stop.
+
+---
+
+## 10. Verificar
 
 ```bash
 python scripts/preflight.py
@@ -281,5 +300,8 @@ Debe devolver posiciones, régimen de mercado y candidatos, sin ejecutar nada.
 - [ ] `python scanner.py` una vez y llega la notificación al teléfono
 - [ ] Alpaca responde `get_clock` y el mercado está abierto o en cola
 - [ ] `python mcp/ccxt/server.py --healthcheck` reporta modo SANDBOX
+- [ ] `python -m pytest -q` pasa
+- [ ] `python risk_engine.py check` sin planes inválidos
+- [ ] el motor de riesgo está programado y corriendo
 - [ ] `.env`, `mcp/ccxt/.env` y `secrets/` no aparecen en `git status`
 - [ ] `/trading-scan` corre de punta a punta sin ejecutar órdenes

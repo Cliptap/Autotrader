@@ -16,7 +16,7 @@ por qué importan y cómo se cierran.
 | Collector de snapshots | Listo |
 | Cálculo de tamaño de posición | Listo (`scripts/position_size.py`) |
 | Preflight de entorno | Listo (`scripts/preflight.py`) |
-| Motor de riesgo que ejecute stops | **Falta** |
+| Motor de riesgo que ejecute stops | Listo (`risk_engine.py` + tests) |
 | Métricas automáticas y journal | **Falta** |
 | Backtester | **Falta** |
 | Reconciliación paper ↔ real | **Falta** |
@@ -32,24 +32,26 @@ por qué importan y cómo se cierran.
 una posición que perforó el stop. Es la diferencia entre una pérdida planificada
 y una pérdida arbitraria.
 
-**Especificación.**
+**Estado: implementado** en `risk_engine.py` (ver
+[`risk-engine.md`](risk-engine.md)).
 
-- Proceso sin LLM (`risk_engine.py`) que corre cada 60 s.
-- Lee posiciones reales (CCXT `get_open_orders`, Alpaca `get_all_positions`) y
-  el plan de cada operación desde `state/positions.json`.
-- Si `precio <= stop` en long o `precio >= stop` en short, coloca la orden de
-  cierre con `client_order_id` derivado de la posición.
-- Si el broker soporta bracket/OCO, verifica que la orden protectora exista; si
-  no existe, la crea.
-- Escribe cada acción en `state/risk-log.jsonl`.
-- Rechaza operar si el plan no tiene stop.
+- Proceso sin LLM que corre cada 60 s.
+- Planes en `state/positions.json`; el stop es obligatorio al registrarlos.
+- Cierra a mercado cuando el precio perfora el stop (o el target, si está
+  habilitado).
+- `client_order_id` estable: un reinicio consulta la orden en lugar de duplicar
+  el cierre.
+- Venues live bloqueados salvo `RISK_ENGINE_LIVE=true`.
+- Log en `state/risk-log.jsonl`; tres rechazos ⇒ `failed` y revisión humana.
+- 23 tests unitarios que cubren validación, breaches, idempotencia y huérfanos.
 
-**Criterios de aceptación.**
+**Pendiente dentro del mismo ítem.**
 
-- [ ] una posición con stop violado se cierra en menos de 90 s
-- [ ] no se duplica la orden de cierre si el proceso reinicia
-- [ ] funciona con el mercado cerrado (deja la orden en cola)
-- [ ] testeado con un stop simulado en testnet
+- [x] cierre automático y persistente
+- [x] idempotencia entre reinicios
+- [ ] integración opcional con el journal (cerrar el plan actualiza el dashboard)
+- [ ] cierre por cantidad exacta del venue en fills parciales
+- [ ] prueba manual en testnet documentada con fecha y resultado
 
 ### 1.2 Kill switch
 

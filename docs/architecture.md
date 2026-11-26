@@ -92,6 +92,24 @@ para recibir replies, menciones y tareas.
 Es la fuente de verdad para el ciclo `predict → validate`: sin snapshots no hay
 forma de saber si la tesis era correcta o si acertamos por suerte.
 
+### Motor de riesgo (stops)
+
+`risk_engine.py` corre cada 60 segundos sin LLM. Lee los planes de
+`state/positions.json`, consulta el precio y cierra las posiciones cuyo stop fue
+perforado. Su única responsabilidad es reducir riesgo: no abre posiciones.
+
+Compuertas propias:
+
+- venues en sandbox o paper ejecutan el cierre; venues live requieren
+  `RISK_ENGINE_LIVE=true`;
+- `client_order_id` estable (`rk-<hash>`) para no duplicar el cierre tras un
+  reinicio;
+- tres rechazos ⇒ estado `failed`, que exige intervención humana;
+- `state/HALT` no lo detiene: el kill switch bloquea entradas nuevas, no la
+  protección de posiciones abiertas.
+
+Detalle: [`docs/risk-engine.md`](risk-engine.md).
+
 ## Flujo de una operación
 
 ```mermaid
@@ -124,6 +142,8 @@ sequenceDiagram
 | Posiciones paper y puntos | AI-Trader | Sí, vía API |
 | Posiciones reales | Exchange / broker | Sí, vía CCXT o Alpaca |
 | Snapshots de mercado | `.opencode/knowledge/market-data/` | No (solo histórico local) |
+| Planes y stops | `state/positions.json` | Sí, desde el journal |
+| Log del motor | `state/risk-log.jsonl` | No |
 | Tesis y lecciones | `.opencode/knowledge/*.md` | No |
 | Secretos | `.env`, variables de entorno | No (rotar si se pierden) |
 | Límites operativos | `trading-rules.md` + entorno | Sí, están versionados |
@@ -150,5 +170,7 @@ divergen, gana el script porque es determinístico.
 | Collector caído | Se pierden snapshots, no trades | Auto-resume y estado persistido en `collector_state.json` |
 | Desvío de reloj | CCXT bloquea órdenes | `w32tm /resync /force` o servicio de hora activo |
 | Timeout de red en una orden | Estado incierto | `reconcile_order()` antes de reintentar |
+| Motor de riesgo caído | El stop no se ejecuta solo | Programarlo como servicio con reinicio |
+| Gap de precio sobre el stop | Cierre a mercado, no al stop | Aceptar el riesgo o usar bracket nativo |
 | Token filtrado | Terceros operan la cuenta paper | Rotar token y revisar el feed del agente |
 | LLM con sesgo | Tesis repetida sin evidencia contraria | Regla anti-sesgo + revisión semanal |

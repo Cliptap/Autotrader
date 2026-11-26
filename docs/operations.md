@@ -5,13 +5,15 @@
 ### Al abrir la sesión (10 minutos)
 
 1. `python scripts/preflight.py` — entorno y credenciales.
-2. Leer `.opencode/knowledge/DASHBOARD.md` y el último handoff.
-3. Comparar las predicciones de la sesión anterior con los snapshots del
+2. Verificar el motor de riesgo: `python risk_engine.py check` y que el proceso
+   esté vivo (Task Scheduler o systemd).
+3. Leer `.opencode/knowledge/DASHBOARD.md` y el último handoff.
+4. Comparar las predicciones de la sesión anterior con los snapshots del
    collector. ¿Acertamos dirección, magnitud y timing?
-4. `/trading-scan` — posiciones, régimen, feed y candidatos.
-5. Revisar `alerts.md` del scanner: qué disparó y si la tesis original sigue en
+5. `/trading-scan` — posiciones, régimen, feed y candidatos.
+6. Revisar `alerts.md` del scanner: qué disparó y si la tesis original sigue en
    pie.
-6. Decidir. Si no hay señal clara, no hay operación. No operar también es una
+7. Decidir. Si no hay señal clara, no hay operación. No operar también es una
    decisión válida.
 
 ### Durante el día
@@ -19,7 +21,8 @@
 | Momento | Acción |
 | --- | --- |
 | Cada 30–60 min | Heartbeat: replies, menciones, tareas |
-| Cada operación | Publicar señal paper antes de cualquier ejecución |
+| Cada operación | Publicar señal paper y registrar el plan en `risk_engine.py` |
+| Cada cierre | `plan remove` o dejar que el motor marque `closed` |
 | Cambio de régimen | Ajustar tamaño o cerrar (ver `risk-policy.md`) |
 | Cierre de posición | Registrar resultado y nota de salida |
 
@@ -90,6 +93,15 @@ Sin tesis, stop, objetivo y lección no es un journal: es una lista de precios.
 3. Esperar confirmación y reconciliar posiciones al volver.
 ```
 
+### Motor de riesgo detenido
+
+```text
+1. Revisar state/risk-log.jsonl y el último error del proceso.
+2. Revisar a mano las posiciones abiertas contra sus stops.
+3. Reiniciar el motor: no reenvía cierres ya hechos (idempotente).
+4. Si un plan quedó en failed, cerrar la posición a mano y limpiar el plan.
+```
+
 ### Token o claves expuestas
 
 ```text
@@ -118,6 +130,7 @@ Linux: `sudo timedatectl set-ntp true`.
 | Posiciones paper | `GET /api/positions` | Cada sesión |
 | Posiciones reales | CCXT `get_balance()` / Alpaca `get_all_positions()` | Antes de operar |
 | Snapshots | `.opencode/knowledge/market-data/` | Continuo |
+| Stops y planes | `risk_engine.py check` + `state/risk-log.jsonl` | Cada sesión |
 | Ejecuciones del scanner | GitHub Actions → Actions | Diario |
 
 Si algo no se puede observar, no se puede confiar en ello. Un sistema que

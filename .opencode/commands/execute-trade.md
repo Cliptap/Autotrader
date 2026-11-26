@@ -38,8 +38,18 @@ confirms, mirrors the operation on the broker.
    - crypto: `exchange_info()` → `create_order()` → `get_open_orders()`
    - stocks: `get_clock()` → `place_stock_order()` (prefer bracket orders)
    - on timeout: `reconcile_order(client_order_id, symbol)` before any retry
-7. Register the operation in `.opencode/knowledge/DASHBOARD.md` and the journal.
-8. If a real session was armed, `disarm_live_session()` when done.
+7. Register the position in the risk engine (required when the venue holds a
+   real or sandbox position):
+
+   ```bash
+   python risk_engine.py plan add --symbol <SYMBOL> --venue ccxt|alpaca \
+     --market crypto|us-stock --side long|short --qty <qty> \
+     --entry <entry> --stop <stop> --target <target> --equity <equity>
+   ```
+
+   Without a plan there is no automatic stop. Never skip this step.
+8. Register the operation in `.opencode/knowledge/DASHBOARD.md` and the journal.
+9. If a real session was armed, `disarm_live_session()` when done.
 
 ## Parameters
 

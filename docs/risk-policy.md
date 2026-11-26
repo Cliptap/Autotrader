@@ -59,9 +59,15 @@ el notional $2.000 (20%): se recorta a 10 unidades y el riesgo real baja a $25.
 - Se definen **antes** de entrar, junto con el objetivo.
 - Se colocan como orden real cuando el broker lo permite (bracket en Alpaca,
   OCO en CCXT).
-- Solo se mueven a favor: a break-even y luego trailing.
+- El plan se registra en `risk_engine.py` para que el stop se ejecute aunque no
+  haya sesión abierta.
+- Solo se mueven a favor: a break-even y luego trailing. Si se mueve el stop,
+  actualizar el plan (`plan remove` + `plan add`), no solo el gráfico.
 - Un stop mental no es un stop. Si el mercado se mueve rápido y no hay orden
   colocada, la pérdida puede duplicar el plan.
+
+Orden de preferencia: bracket/OCO en el exchange, después el motor de riesgo,
+nunca el stop mental. Ver [`risk-engine.md`](risk-engine.md).
 
 ## Concentración y correlación
 

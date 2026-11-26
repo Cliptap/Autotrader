@@ -131,9 +131,11 @@ Guía completa: [`docs/setup.md`](docs/setup.md).
 .
 ├── scanner.py                 # vigilancia 24/7: consenso de agentes → push
 ├── collector.py               # snapshots de mercado + heartbeat (system tray)
+├── risk_engine.py             # ejecuta los stops aunque no haya sesión abierta
 ├── scripts/
 │   ├── preflight.py           # valida entorno, claves y conectividad
 │   └── position_size.py       # tamaño de posición según riesgo
+├── tests/                     # tests del motor de riesgo
 ├── mcp/ccxt/                  # MCP server de ejecución crypto (CCXT)
 ├── .opencode/
 │   ├── rules/trading-rules.md # política de riesgo que el agente debe seguir
@@ -160,6 +162,10 @@ modelo:
   limit) más idempotencia con `client_order_id` y `reconcile_order()`.
 - **Alpaca paper por defecto**: `ALPACA_PAPER_TRADE=true` y solo 7 de 13
   toolsets habilitados.
+- **Stops ejecutables**: `risk_engine.py` cierra la posición cuando el stop se
+  perfora, aunque la sesión esté cerrada. Usa un `client_order_id` estable para
+  no vender dos veces tras un reinicio y se bloquea en venues live salvo
+  `RISK_ENGINE_LIVE=true`.
 - **Reglas duras**: 2% de riesgo por operación, stop obligatorio, drawdown
   máximo 15% en paper y 10% antes de pasar a real.
 - **Secretos fuera del repo**: variables de entorno o `.env` ignorados por git.
@@ -177,6 +183,7 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 | [`docs/setup.md`](docs/setup.md) | Instalación de cero, claves y verificación |
 | [`docs/trading-modes.md`](docs/trading-modes.md) | Paper → sandbox → live, criterios de promoción |
 | [`docs/risk-policy.md`](docs/risk-policy.md) | Sizing, stops, límites y kill switch |
+| [`docs/risk-engine.md`](docs/risk-engine.md) | Motor que ejecuta los stops sin sesión abierta |
 | [`docs/copytrading.md`](docs/copytrading.md) | Evaluar agentes, copiar y replicar |
 | [`docs/operations.md`](docs/operations.md) | Rutina diaria, revisión y respuesta a incidentes |
 | [`docs/scanner.md`](docs/scanner.md) | Lógica del scanner y despliegue en Actions |
@@ -191,5 +198,6 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 - Sandbox de Binance validado con órdenes limit.
 - Ejecución de acciones en Alpaca paper.
 - Scanner 24/7 con alertas push.
-- Pendiente: motor de riesgo que ejecute stops, backtester y métricas
-  automáticas. Ver [`docs/roadmap.md`](docs/roadmap.md).
+- Motor de riesgo con stops idempotentes, tests y prueba en testnet.
+- Pendiente: backtester, métricas automáticas y reconciliación paper ↔ real.
+  Ver [`docs/roadmap.md`](docs/roadmap.md).

@@ -102,11 +102,16 @@ Protocolo de sesión:
 2. get_balance()          → saldo disponible real
 3. get_ticker(symbol)     → precio fresco
 4. calcular qty con scripts/position_size.py
-5. publicar la señal paper equivalente
-6. create_order()         → limit preferentemente
-7. get_open_orders()      → confirmar que quedó viva
-8. disarm_live_session()  → al cerrar la sesión
+5. registrar el plan en risk_engine.py (stop obligatorio)
+6. publicar la señal paper equivalente
+7. create_order()         → limit preferentemente
+8. get_open_orders()      → confirmar que quedó viva
+9. disarm_live_session()  → al cerrar la sesión
 ```
+
+El paso 5 es lo que hace que el stop siga existiendo cuando se cierra la
+terminal: sin plan registrado y sin `RISK_ENGINE_LIVE=true`, la posición queda
+sin protección automática.
 
 Nunca:
 

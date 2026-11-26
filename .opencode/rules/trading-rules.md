@@ -52,6 +52,7 @@ Antes de enviar una orden a CCXT o Alpaca:
 - [ ] la cantidad respeta el mínimo del mercado y el tope por orden
 - [ ] stop y objetivo están definidos y el R:R es ≥ 2
 - [ ] la señal paper equivalente ya fue publicada
+- [ ] el plan quedó registrado en `risk_engine.py` (si el venue tiene la posición)
 - [ ] el `client_order_id` quedó registrado en el journal
 
 Después:
