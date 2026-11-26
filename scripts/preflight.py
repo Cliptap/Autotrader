@@ -148,6 +148,38 @@ def check_secrets() -> None:
         record(PASS, "MAX_ORDER_VALUE_USD", f"{max_order:.0f} USD")
 
 
+def check_risk() -> None:
+    """Validate the stop plans the risk engine depends on."""
+    try:
+        import risk_engine
+    except Exception as exc:  # noqa: BLE001
+        record(WARN, "risk engine", f"no se pudo importar: {exc}")
+        return
+    try:
+        plans = risk_engine.load_plans()
+    except Exception as exc:  # noqa: BLE001
+        record(FAIL, "risk plans", f"state/positions.json ilegible: {exc}")
+        return
+
+    active = [p for p in plans if p.status not in risk_engine.FINAL_STATES]
+    invalid: list[str] = []
+    for plan in active:
+        try:
+            risk_engine.validate_plan(plan)
+        except ValueError as exc:
+            invalid.append(f"{plan.id}: {exc}")
+
+    if invalid:
+        record(FAIL, "risk plans", "; ".join(invalid))
+    elif active:
+        record(PASS, "risk plans", f"{len(active)} activos")
+    else:
+        record(PASS, "risk plans", "sin posiciones abiertas")
+
+    if env("RISK_ENGINE_LIVE", "false").lower() == "true":
+        record(WARN, "risk engine", "RISK_ENGINE_LIVE=true: puede cerrar posiciones reales")
+
+
 def _http_json(url: str, headers: dict[str, str] | None = None, timeout: int = 15):
     request = urllib.request.Request(url, headers=headers or {})
     with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
@@ -221,6 +253,7 @@ def main() -> int:
     check_files()
     check_dependencies()
     check_secrets()
+    check_risk()
     if not args.offline:
         check_network()
 
