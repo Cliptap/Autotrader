@@ -1,1 +1,4 @@
+# Local environment (scanner, collector, scripts)
 requests>=2.28
+pystray>=0.19.5
+pillow>=10.0.0
