@@ -27,7 +27,7 @@ jobs:
 
       - name: Tests
         run: |
-          python -m pip install --quiet pytest
+          python -m pip install --quiet pytest requests
           python -m pytest -q
 
       - name: Configuration sanity
