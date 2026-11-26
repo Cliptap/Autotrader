@@ -163,11 +163,17 @@ def test_open_close_order_waits():
 
 
 def test_filled_close_finalizes_the_plan():
-    plan = make_plan(status="closing", close_client_id="rk-x", close_sent_at=re.iso())
+    plan = make_plan(
+        status="closing",
+        close_client_id="rk-x",
+        close_sent_at=re.iso(),
+        last_error="blocked: dry-run",
+    )
     venue = FakeVenue(price=90.0, status={"id": "order-1", "status": "filled", "price": 93.8})
     assert re.process_plan(plan, venue, allow_live=True) == "closed"
     assert plan.status == "closed"
     assert plan.exit_price == 93.8
+    assert plan.last_error is None
 
 
 def test_missing_close_order_is_retried_after_grace():

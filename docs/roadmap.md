@@ -51,7 +51,8 @@ y una pérdida arbitraria.
 - [x] idempotencia entre reinicios
 - [ ] integración opcional con el journal (cerrar el plan actualiza el dashboard)
 - [ ] cierre por cantidad exacta del venue en fills parciales
-- [ ] prueba manual en testnet documentada con fecha y resultado
+- [x] prueba manual en testnet documentada con fecha y resultado
+      (2026-11-26, ver [`risk-engine.md`](risk-engine.md#validación-en-testnet))
 
 ### 1.2 Kill switch
 

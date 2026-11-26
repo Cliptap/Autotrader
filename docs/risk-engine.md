@@ -174,6 +174,26 @@ WantedBy=multi-user.target
 4. `python risk_engine.py plan list` → estado `closing` y luego `closed`.
 5. Reiniciar el proceso a mitad del cierre → no debe enviar una segunda orden.
 
+## Validación en testnet
+
+Ejecutada el **2026-11-26** contra Binance testnet (modo `SANDBOX`, `ccxt`),
+símbolo `BTC/USDT`, cantidad `0.0002 BTC` (≈ USD 12,14 por orden).
+
+| Caso | Esperado | Observado |
+| --- | --- | --- |
+| Stop perforado (precio 60.675 < stop 60.700) | Enviar un cierre | Orden `18120067` a 60.675,75 |
+| Segundo ciclo (proceso nuevo) | Reconciliar, no reenviar | `closed`, sin segunda orden |
+| `--dry-run` con breach | Bloquear | `blocked: dry-run`, 0 órdenes |
+| Reinicio entre envío y confirmación | Reconciliar por `client_order_id` | `closed` con la orden original |
+| Crash antes del envío (orden inexistente) | Reintentar, marcar intento | `retry`, `attempts=1`, 0 órdenes |
+| Duplicados en el exchange | Una orden por plan | 2 planes → 2 órdenes, 0 duplicadas |
+| Saldo | Descontar exactamente lo vendido | BTC 1,0000 → 0,9996 |
+
+Las dos órdenes de cierre (una por plan) quedaron con ids distintos y la misma
+cantidad, y el log `state/risk-log.jsonl` registró `close_sent` y `closed` para
+cada una. El fill fue a mercado, como corresponde: el stop es el disparador, no
+el precio garantizado.
+
 ## Límites conocidos
 
 - **Gap risk**: el cierre es a mercado. Si el precio salta el stop, se ejecuta

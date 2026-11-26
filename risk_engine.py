@@ -409,6 +409,7 @@ def process_plan(
             plan.closed_at = iso()
             plan.exit_price = status.get("price")
             plan.close_order_id = status.get("id") or plan.close_order_id
+            plan.last_error = None
             log_event(plan, "closed", exit_price=plan.exit_price, order_id=plan.close_order_id)
             return "closed"
         if state in ("canceled", "cancelled", "expired", "rejected"):
