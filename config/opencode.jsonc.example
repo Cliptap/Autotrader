@@ -1,0 +1,57 @@
+{
+  // Configuración de OpenCode para el entorno de trading.
+  // Copiar a opencode.jsonc en la raíz del repo.
+  // Los secretos NO van acá: se referencian con {env:VARIABLE}.
+  "$schema": "https://opencode.ai/config.json",
+
+  // Cualquier modelo con tool calling sirve. Ajustar al proveedor propio.
+  "model": "opencode-go/deepseek-v4-pro",
+  "small_model": "opencode-go/deepseek-v4-pro",
+
+  "instructions": [
+    ".opencode/rules/trading-rules.md",
+    ".opencode/knowledge/DASHBOARD.md",
+    ".opencode/knowledge/SESSION_HANDOFF.md"
+  ],
+
+  "mcp": {
+    "servers": {
+      "ccxt": {
+        "type": "local",
+        "command": ["python", "mcp/ccxt/server.py"],
+        // El servidor lee credenciales de mcp/ccxt/.env
+        "environment": {
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "alpaca": {
+        "type": "local",
+        "command": ["uvx", "alpaca-mcp-server"],
+        "environment": {
+          "ALPACA_API_KEY": "{env:ALPACA_API_KEY}",
+          "ALPACA_SECRET_KEY": "{env:ALPACA_SECRET_KEY}",
+          // Dejar en true hasta cumplir los criterios de promoción.
+          "ALPACA_PAPER_TRADE": "true",
+          "ALPACA_TOOLSETS": "trading,account,stock-data,positions,assets,watchlists,news"
+        }
+      }
+    }
+  },
+
+  "permissions": [
+    // Toda orden, cancelación o armado de sesión real pide confirmación.
+    { "action": "ccxt_create_order", "resource": "*", "effect": "ask" },
+    { "action": "ccxt_create_bracket_order", "resource": "*", "effect": "ask" },
+    { "action": "ccxt_create_oco_order", "resource": "*", "effect": "ask" },
+    { "action": "ccxt_cancel_order", "resource": "*", "effect": "ask" },
+    { "action": "ccxt_arm_live_session", "resource": "*", "effect": "ask" },
+    { "action": "alpaca_place_stock_order", "resource": "*", "effect": "ask" },
+    { "action": "alpaca_close_position", "resource": "*", "effect": "ask" },
+    { "action": "alpaca_close_all_positions", "resource": "*", "effect": "ask" },
+    { "action": "alpaca_cancel_all_orders", "resource": "*", "effect": "ask" }
+  ],
+
+  "compaction": {
+    "auto": true
+  }
+}
