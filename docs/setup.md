@@ -324,5 +324,6 @@ Debe devolver posiciones, régimen de mercado y candidatos, sin ejecutar nada.
 - [ ] `python scripts/metrics.py report` calcula métricas sin errores
 - [ ] el dashboard se regenera y muestra posiciones reales
 - [ ] `python scripts/reconcile.py` no reporta errores
+- [ ] `python scripts/backtest.py` corre sobre los snapshots disponibles
 - [ ] `.env`, `mcp/ccxt/.env` y `secrets/` no aparecen en `git status`
 - [ ] `/trading-scan` corre de punta a punta sin ejecutar órdenes

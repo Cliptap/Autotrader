@@ -132,6 +132,15 @@ que evita operar en real sobre un estado que ya no coincide con la realidad.
 
 Detalle: [`docs/reconciliation.md`](reconciliation.md).
 
+### Backtester
+
+`scripts/backtest.py` reproduce los snapshots del collector y simula la
+estrategia de consenso con fees, slippage y stops. Sirve para comparar umbrales
+antes de tocarlos y para descartar reglas que no tienen edge con los datos
+reales. Advierte cuando la muestra es demasiado corta para concluir.
+
+Detalle: [`docs/backtest.md`](backtest.md).
+
 ## Flujo de una operación
 
 ```mermaid

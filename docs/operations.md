@@ -43,6 +43,8 @@
 ## Revisión semanal
 
 - Correr `python scripts/metrics.py report` y comparar contra la semana previa.
+- Correr `python scripts/backtest.py --sweep` y ver si los umbrales siguen
+  teniendo sentido con los snapshots nuevos.
 - Win rate, profit factor, drawdown y cantidad de operaciones cerradas.
 - Comparación contra el benchmark (BTC para crypto, SPY para acciones).
 - Qué regla se rompió y por qué.

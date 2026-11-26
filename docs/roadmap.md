@@ -18,7 +18,7 @@ por qué importan y cómo se cierran.
 | Preflight de entorno | Listo (`scripts/preflight.py`) |
 | Motor de riesgo que ejecute stops | Listo (`risk_engine.py` + tests) |
 | Métricas automáticas y journal | Listo (`scripts/metrics.py` + tests) |
-| Backtester | **Falta** |
+| Backtester | Listo (`scripts/backtest.py` + tests) |
 | Reconciliación paper ↔ real | Listo (`scripts/reconcile.py` + tests) |
 | Kill switch global | Parcial: `preflight.py` detecta `state/HALT` |
 
@@ -130,18 +130,24 @@ de memoria.
 **Problema.** El collector guarda snapshots desde el día uno y no se usan para
 validar reglas.
 
-**Especificación.**
+**Estado: implementado** en `scripts/backtest.py` (ver
+[`backtest.md`](backtest.md)).
 
-- `scripts/backtest.py` reproduce snapshots en orden cronológico.
-- Evalúa las reglas declaradas (consenso, macro, F&G) y simula entradas con
-  stop, objetivo y fees.
-- Reporte: curva de equity, drawdown, trades, sensibilidad a umbrales.
+- Replay cronológico y determinístico de los snapshots del collector.
+- Deduplica señales por id y usa el momento de observación (sin lookahead).
+- Reglas configurables: consenso, ventana, filtro macro, stop, objetivo, tiempo
+  máximo, cooldown de reentrada, notional, fees y slippage.
+- Reutiliza `metrics.compute_metrics`, así el backtest y el journal se miden
+  igual.
+- `--sweep` compara consenso 1-3 × macro 0/3.
+- Advierte cuando el rango es corto o las posiciones quedan abiertas al final.
+- 18 tests unitarios, incluidos determinismo y no-lookahead.
 
-**Criterios de aceptación.**
+**Pendiente dentro del mismo ítem.**
 
-- [ ] el backtest es determinístico para el mismo rango de fechas
-- [ ] incluye fees y slippage configurable
-- [ ] permite comparar dos juegos de umbrales
+- [ ] curva de equity exportable (CSV/PNG)
+- [ ] variantes de estrategia más allá del consenso (F&G, RSI)
+- [ ] walk-forward: calibrar en una ventana y validar en la siguiente
 
 ---
 
