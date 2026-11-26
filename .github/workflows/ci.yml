@@ -25,6 +25,11 @@ jobs:
       - name: "Lint (critical errors: syntax, undefined names)"
         run: ruff check --select E9,F63,F7,F82 --exclude .git .
 
+      - name: Tests
+        run: |
+          python -m pip install --quiet pytest
+          python -m pytest -q
+
       - name: Configuration sanity
         run: |
           python - <<'PY'
