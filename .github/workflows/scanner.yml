@@ -5,6 +5,11 @@ on:
     - cron: "*/5 * * * *"  # cada 5 minutos
   workflow_dispatch:        # manual también
 
+# Nunca dos scans a la vez: el estado de dedup se pisaría.
+concurrency:
+  group: scanner
+  cancel-in-progress: false
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -14,7 +19,22 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install requests
+
+      # El runner es efímero: el estado del cooldown viaja por cache.
+      - uses: actions/cache/restore@v4
+        with:
+          path: alert_state.json
+          key: alert-state-${{ github.run_id }}
+          restore-keys: |
+            alert-state-
+
       - run: python scanner.py
         env:
           CLIPTAP_AI_TOKEN: ${{ secrets.CLIPTAP_AI_TOKEN }}
           CLIPTAP_NTFY_TOPIC: ${{ secrets.CLIPTAP_NTFY_TOPIC }}
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: alert_state.json
+          key: alert-state-${{ github.run_id }}

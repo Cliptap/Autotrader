@@ -6,6 +6,7 @@ secrets/
 mcp/ccxt/.env
 state/
 alerts.md
+alert_state.json
 collector_state.json
 *.log
 
