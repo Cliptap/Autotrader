@@ -46,7 +46,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from env import env, env_int, load_env  # noqa: E402
+from env import env, env_float, env_int, load_env  # noqa: E402
+from exchange_rules import min_orderable_qty, normalize_amount, rules_from_market  # noqa: E402
 
 STATE_DIR = ROOT / "state"
 PLANS_FILE = STATE_DIR / "positions.json"
@@ -189,6 +190,10 @@ class VenueError(RuntimeError):
     pass
 
 
+class PermanentVenueError(VenueError):
+    """Retrying cannot succeed: the order breaks an exchange rule."""
+
+
 class CcxtVenue:
     """Crypto execution through CCXT, reading the same .env as the MCP server."""
 
@@ -240,14 +245,34 @@ class CcxtVenue:
         free = (balance.get("free") or {}).get(base)
         return float(free or 0.0)
 
+    def rules(self, symbol: str):
+        return rules_from_market(self.exchange.market(symbol))
+
     def close(self, plan: Plan, client_id: str) -> dict:
+        rules = self.rules(plan.symbol)
+        qty = normalize_amount(rules, plan.qty)
+        if qty <= 0:
+            raise PermanentVenueError(
+                f"cantidad {plan.qty:g} por debajo del mínimo de {self.exchange_id} "
+                f"({rules.min_amount or '?'}, step {rules.amount_step or '?'}) para {plan.symbol}"
+            )
+
+        price = self.price(plan.symbol)
+        floor = env_float("MIN_NOTIONAL_USD", 10.0)
+        minimum_qty = min_orderable_qty(rules, price, floor)
+        if qty < minimum_qty:
+            raise PermanentVenueError(
+                f"notional ${qty * price:,.2f} por debajo del mínimo "
+                f"(${minimum_qty * price:,.2f}); usar al menos {minimum_qty:g} unidades"
+            )
+
         params = {"recvWindow": 10000}
         if self.exchange_id == "binance":
             params["newClientOrderId"] = client_id
         else:
             params["clientOrderId"] = client_id
         order = self.exchange.create_order(
-            plan.symbol, "market", close_side(plan), plan.qty, None, params
+            plan.symbol, "market", close_side(plan), qty, None, params
         )
         return {
             "id": order.get("id"),
@@ -479,6 +504,11 @@ def process_plan(
     plan.status = "closing"
     try:
         order = venue.close(plan, client_id)
+    except PermanentVenueError as exc:
+        plan.status = "failed"
+        plan.last_error = str(exc)
+        log_event(plan, "close_failed_permanent", error=str(exc))
+        return "failed"
     except Exception as exc:  # noqa: BLE001
         # Keep status=closing: the next cycle reconciles by client id instead
         # of firing a second sell. This is the whole point of the id.

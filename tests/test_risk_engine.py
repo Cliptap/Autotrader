@@ -251,6 +251,19 @@ def test_blocked_is_logged_once_per_window():
     assert plan.blocked_logged_at == first
 
 
+def test_permanent_error_fails_the_plan_without_retry():
+    class RejectingVenue(FakeVenue):
+        def close(self, plan: re.Plan, client_id: str) -> dict:
+            raise re.PermanentVenueError("cantidad por debajo del mínimo del exchange")
+
+    plan = make_plan()
+    venue = RejectingVenue(price=94.0)
+    assert re.process_plan(plan, venue, allow_live=True) == "failed"
+    assert plan.status == "failed"
+    assert "mínimo" in (plan.last_error or "")
+    assert venue.closes == []
+
+
 def test_run_cycle_persists_outcomes():
     re.save_plans([make_plan()])
     counts = re.run_cycle(

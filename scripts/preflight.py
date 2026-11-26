@@ -32,7 +32,6 @@ sys.path.insert(0, str(ROOT))
 from env import env, env_float, load_env  # noqa: E402
 
 AI_TRADER_BASE = "https://ai4trade.ai/api"
-BINANCE_TIME_URL = "https://api.binance.com/api/v3/time"
 
 PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
 results: list[tuple[str, str, str]] = []
@@ -241,13 +240,27 @@ def check_network() -> None:
             record(WARN, "AI-Trader API", f"sin conexión: {exc}")
 
     try:
-        data = _http_json(BINANCE_TIME_URL, timeout=10)
-        drift_ms = abs(int(time.time() * 1000) - int(data["serverTime"]))
-        limit = int(env_float("CLOCK_MAX_DRIFT_MS", 5000))
-        if drift_ms > limit:
-            record(FAIL, "clock drift", f"{drift_ms} ms > {limit} ms (sincronizar el reloj)")
+        import ccxt
+
+        exchange_id = env("CCXT_EXCHANGE", "binance")
+        factory = getattr(ccxt, exchange_id, None)
+        if factory is None:
+            record(FAIL, "exchange", f"desconocido para ccxt: {exchange_id}")
         else:
-            record(PASS, "clock drift", f"{drift_ms} ms")
+            exchange = factory({"enableRateLimit": True})
+            data = exchange.fetch_time()
+            drift_ms = abs(int(time.time() * 1000) - int(data))
+            limit = int(env_float("CLOCK_MAX_DRIFT_MS", 5000))
+            if drift_ms > limit:
+                record(
+                    FAIL,
+                    f"clock drift ({exchange_id})",
+                    f"{drift_ms} ms > {limit} ms (sincronizar el reloj)",
+                )
+            else:
+                record(PASS, f"clock drift ({exchange_id})", f"{drift_ms} ms")
+    except ImportError:
+        record(WARN, "clock drift", "ccxt no instalado: no se pudo verificar")
     except Exception as exc:  # noqa: BLE001
         record(WARN, "clock drift", f"no se pudo verificar: {exc}")
 
