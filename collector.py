@@ -351,6 +351,9 @@ def main():
     print("  Click derecho para opciones")
     print("=" * 50)
 
+    if AGENT_ID <= 0:
+        print("  AVISO: CLIPTAP_AGENT_ID no configurado; el heartbeat puede ser rechazado.")
+
     KNOWLEDGE_DIR.mkdir(parents=True, exist_ok=True)
     load_state()
 

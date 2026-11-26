@@ -20,7 +20,7 @@ por qué importan y cómo se cierran.
 | Métricas automáticas y journal | **Falta** |
 | Backtester | **Falta** |
 | Reconciliación paper ↔ real | **Falta** |
-| Kill switch global | **Falta** |
+| Kill switch global | Parcial: `preflight.py` detecta `state/HALT` |
 
 ---
 
@@ -65,8 +65,9 @@ y una pérdida arbitraria.
 
 **Criterios de aceptación.**
 
-- [ ] con `HALT` presente, ninguna orden nueva se envía
-- [ ] el estado se informa en el preflight y en el próximo `/trading-scan`
+- [x] `preflight.py` detecta `state/HALT` y bloquea la sesión
+- [ ] las herramientas de ejecución consultan `HALT` antes de enviar una orden
+- [ ] el estado se informa en `/trading-scan`
 
 ### 1.3 Reconciliación paper ↔ real
 
