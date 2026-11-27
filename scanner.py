@@ -31,6 +31,7 @@ from zoneinfo import ZoneInfo
 import requests
 
 from env import load_env
+from events import DEFAULT_FILE as EVENTS_FILE, read_events
 
 load_env()
 
@@ -70,6 +71,8 @@ MIN_BUY_CONSENSUS = 2
 GLOBAL_BUY_FRENZY = 5
 MACRO_BULLISH_THRESHOLD = 3
 ALERT_COOLDOWN_MIN = int(os.getenv("ALERT_COOLDOWN_MIN", "60"))
+PRICE_MOVE_PCT = float(os.getenv("PRICE_MOVE_PCT", "1.0"))
+PRICE_MOVE_WINDOW_MIN = int(os.getenv("PRICE_MOVE_WINDOW_MIN", "15"))
 
 # ─── NTFY.SH (notificaciones push al celu) ────────────
 NTFY_TOPIC = os.getenv("CLIPTAP_NTFY_TOPIC", "cliptap-alerts")
@@ -255,6 +258,55 @@ def is_us_market_open(now=None):
     return 570 <= minutes < 960
 
 
+# ─── PRICE MOVES (event bus) ──────────────────────────
+def _event_time(value):
+    try:
+        moment = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
+
+
+def price_moves(events, window_minutes=PRICE_MOVE_WINDOW_MIN, threshold_pct=PRICE_MOVE_PCT, now=None):
+    """Alertas por movimiento de precio dentro de la ventana, desde el bus."""
+    now = now or datetime.now(timezone.utc)
+    cutoff = now - timedelta(minutes=window_minutes)
+    series = {}
+    for event in events:
+        if event.get("source") != "binance" or event.get("type") != "book_ticker":
+            continue
+        symbol = event.get("symbol")
+        observed = _event_time(event.get("ts"))
+        price = event.get("bid") or event.get("ask")
+        if not symbol or observed is None or observed < cutoff:
+            continue
+        if not isinstance(price, (int, float)) or price <= 0:
+            continue
+        series.setdefault(symbol, []).append((observed, float(price)))
+
+    alerts = []
+    for symbol, points in series.items():
+        if len(points) < 2:
+            continue
+        points.sort()
+        first, last = points[0][1], points[-1][1]
+        move = (last - first) / first * 100
+        if abs(move) < threshold_pct:
+            continue
+        arrow = "▲" if move > 0 else "▼"
+        alerts.append(
+            Alert(
+                key=f"move:{symbol}",
+                symbol=symbol,
+                kind="move",
+                title=f"{arrow} {symbol} {move:+.2f}%",
+                message=f"{window_minutes} min: {first:.6g} → {last:.6g} ({move:+.2f}%)",
+                priority="high" if abs(move) >= threshold_pct * 2 else "default",
+            )
+        )
+    return alerts
+
+
 # ─── STATE / DEDUP ────────────────────────────────────
 def load_alert_state(path=None):
     path = Path(path or STATE_FILE)
@@ -366,6 +418,13 @@ def scan():
             )
         )
 
+    # ── Movimientos de precio desde el bus local (si existe) ──
+    if EVENTS_FILE.is_file():
+        try:
+            alerts.extend(price_moves(read_events(EVENTS_FILE, limit=500)))
+        except Exception as exc:  # noqa: BLE001 - the bus must not break the scan
+            print(f"[events] {exc}")
+
     state = load_alert_state()
     summary = dispatch(alerts, state)
     save_alert_state(state)
@@ -387,6 +446,7 @@ def main():
         print(f"  Topic: {NTFY_TOPIC}")
         print(f"  {len(FOLLOWED_AGENTS)} agentes | crypto: {len(TRACKED_CRYPTO)} stocks: {len(TRACKED_STOCKS)} | cada {SCAN_INTERVAL}s")
         print(f"  Compra: >= {MIN_BUY_CONSENSUS} agentes | Stocks: score >= {STOCK_MIN_SCORE}")
+        print(f"  Movimientos: ±{PRICE_MOVE_PCT}% en {PRICE_MOVE_WINDOW_MIN} min (si hay bus)")
         print(f"  Cooldown: {ALERT_COOLDOWN_MIN} min")
         print("=" * 55)
         print()

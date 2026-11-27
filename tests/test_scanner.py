@@ -123,6 +123,70 @@ def test_market_closed_on_weekends():
     assert not scanner.is_us_market_open(datetime(2026, 1, 17, 15, tzinfo=timezone.utc))
 
 
+# ─── price moves ──────────────────────────────────────
+NOW = datetime(2026, 11, 26, 12, tzinfo=timezone.utc)
+
+
+def price_event(minutes_ago: float, bid: float, symbol: str = "BTC/USDT", **overrides) -> dict:
+    event = {
+        "ts": (NOW - timedelta(minutes=minutes_ago)).isoformat(),
+        "source": "binance",
+        "type": "book_ticker",
+        "symbol": symbol,
+        "bid": bid,
+    }
+    event.update(overrides)
+    return event
+
+
+def test_upward_move_triggers_a_high_priority_alert():
+    events = [price_event(10, 100.0), price_event(1, 102.5)]
+    alerts = scanner.price_moves(events, window_minutes=15, threshold_pct=1.0, now=NOW)
+    assert len(alerts) == 1
+    alert = alerts[0]
+    assert alert.key == "move:BTC/USDT"
+    assert alert.kind == "move"
+    assert "+2.50%" in alert.title
+    assert alert.priority == "high"
+
+
+def test_downward_move_is_negative():
+    events = [price_event(10, 100.0), price_event(1, 98.0)]
+    alerts = scanner.price_moves(events, window_minutes=15, threshold_pct=1.0, now=NOW)
+    assert "-2.00%" in alerts[0].title
+    assert "▼" in alerts[0].title
+
+
+def test_move_below_threshold_is_ignored():
+    events = [price_event(10, 100.0), price_event(1, 100.4)]
+    assert scanner.price_moves(events, window_minutes=15, threshold_pct=1.0, now=NOW) == []
+
+
+def test_events_outside_the_window_are_ignored():
+    events = [price_event(40, 100.0), price_event(30, 110.0)]
+    assert scanner.price_moves(events, window_minutes=15, threshold_pct=1.0, now=NOW) == []
+
+
+def test_single_point_is_not_a_move():
+    assert scanner.price_moves([price_event(1, 100.0)], now=NOW) == []
+
+
+def test_non_binance_or_non_ticker_events_are_ignored():
+    events = [
+        price_event(10, 100.0, source="ai-trader"),
+        price_event(1, 110.0, source="ai-trader"),
+        price_event(10, 100.0, type="trade"),
+        price_event(1, 110.0, type="trade"),
+    ]
+    assert scanner.price_moves(events, now=NOW) == []
+
+
+def test_moderate_move_is_default_priority():
+    events = [price_event(10, 100.0), price_event(1, 101.5)]
+    alerts = scanner.price_moves(events, window_minutes=15, threshold_pct=1.0, now=NOW)
+    assert alerts[0].priority == "default"
+
+
 # ─── dedup state ──────────────────────────────────────
 def test_state_roundtrip(tmp_path):
     path = tmp_path / "state.json"
