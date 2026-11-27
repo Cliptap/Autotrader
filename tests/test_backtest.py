@@ -226,6 +226,47 @@ def test_sweep_covers_the_grid():
     assert next(row for row in rows if row["consensus"] == 3 and row["macro_min"] == 0)["trades"] == 0
 
 
+# ─── fees ─────────────────────────────────────────────
+def test_tracked_symbols_extracts_only_crypto():
+    snap = snapshot(0, {"BTC": 100})
+    snap["prices"]["AAPL/us-stock"] = {"symbol": "AAPL", "market": "us-stock", "price": 220.0}
+    assert bt.tracked_symbols([snap]) == ["BTC"]
+
+
+def test_fee_rate_prefers_the_schedule():
+    p = params(fee_pct=0.5, fee_schedule={"BTC": 0.0005})
+    assert bt.fee_rate(p, "BTC") == pytest.approx(0.0005)
+    assert bt.fee_rate(p, "ETH") == pytest.approx(0.005)
+
+
+def test_fee_schedule_overrides_the_fixed_fee_in_trades():
+    snaps = [
+        snapshot(0, {"BTC": 100}, [signal(1, 10), signal(2, 11)]),
+        snapshot(1, {"BTC": 106}),
+    ]
+    result = bt.run_backtest(
+        snaps,
+        params(stop_pct=2, take_pct=4, fee_pct=0.0, fee_schedule={"BTC": 0.001}),
+    )
+    trade = result.trades[0]
+    expected = (trade.entry + trade.exit) * trade.qty * 0.001
+    assert trade.fees == pytest.approx(expected)
+
+
+def test_unknown_symbol_falls_back_to_the_fixed_fee():
+    snaps = [
+        snapshot(0, {"BTC": 100}, [signal(1, 10), signal(2, 11)]),
+        snapshot(1, {"BTC": 106}),
+    ]
+    result = bt.run_backtest(
+        snaps,
+        params(stop_pct=2, take_pct=4, fee_pct=0.2, fee_schedule={"ETH": 0.001}),
+    )
+    trade = result.trades[0]
+    expected = (trade.entry + trade.exit) * trade.qty * 0.002
+    assert trade.fees == pytest.approx(expected)
+
+
 # ─── loading ──────────────────────────────────────────
 def test_load_snapshots_sorts_and_skips_broken_files(tmp_path: Path):
     day = tmp_path / "2026-11-01"

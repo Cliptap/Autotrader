@@ -34,7 +34,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from env import load_env  # noqa: E402
+from env import env, load_env  # noqa: E402
 
 DEFAULT_DIR = ROOT / ".opencode" / "knowledge" / "market-data"
 BUY_SIDES = {"buy", "long"}
@@ -51,6 +51,7 @@ class Params:
     reentry_cooldown_hours: float = 6.0
     notional: float = 1_000.0
     fee_pct: float = 0.1
+    fee_schedule: dict[str, float] = field(default_factory=dict)
     slippage_pct: float = 0.05
     start_equity: float = 10_000.0
 
@@ -115,6 +116,50 @@ def _signal_symbols(signal: dict[str, Any]) -> list[str]:
     if signal.get("symbol"):
         return [str(signal["symbol"]).upper()]
     return [str(item).upper() for item in (signal.get("symbols") or []) if item]
+
+
+def tracked_symbols(snapshots: list[dict[str, Any]]) -> list[str]:
+    """Crypto base symbols present in the snapshots (BTC, ETH, ...)."""
+    symbols: set[str] = set()
+    for snapshot in snapshots:
+        for item in (snapshot.get("prices") or {}).values():
+            if not isinstance(item, dict) or item.get("market") != "crypto":
+                continue
+            symbol = str(item.get("symbol") or "").upper()
+            if symbol:
+                symbols.add(symbol)
+    return sorted(symbols)
+
+
+def load_fee_schedule(
+    symbols: list[str],
+    exchange_id: str = "binance",
+    quote: str = "USDT",
+) -> dict[str, float]:
+    """Taker fee per base symbol, read from the venue's market metadata."""
+    try:
+        import ccxt
+    except ImportError:
+        return {}
+    factory = getattr(ccxt, exchange_id, None)
+    if factory is None:
+        return {}
+    exchange = factory({"enableRateLimit": True})
+    exchange.load_markets()
+    schedule: dict[str, float] = {}
+    for symbol in symbols:
+        market = exchange.markets.get(f"{symbol.upper()}/{quote}")
+        if market and market.get("taker") is not None:
+            schedule[symbol.upper()] = float(market["taker"])
+    return schedule
+
+
+def fee_rate(params: Params, symbol: str) -> float:
+    """Fraction per side: the venue fee when known, the fixed default otherwise."""
+    known = params.fee_schedule.get(str(symbol).upper())
+    if known is not None:
+        return known
+    return params.fee_pct / 100
 
 
 def _prices_from(snapshot: dict[str, Any]) -> dict[tuple[str, str], float]:
@@ -205,7 +250,7 @@ def run_backtest(snapshots: list[dict[str, Any]], params: Params) -> Result:
                 continue
 
             exit_price *= 1 - params.slippage_pct / 100
-            fees = (position.entry + exit_price) * position.qty * params.fee_pct / 100
+            fees = (position.entry + exit_price) * position.qty * fee_rate(params, position.symbol)
             trades.append(
                 metrics.Trade(
                     id=f"bt-{len(trades) + 1}",
@@ -262,7 +307,7 @@ def run_backtest(snapshots: list[dict[str, Any]], params: Params) -> Result:
             if price is None:
                 continue
             exit_price = price * (1 - params.slippage_pct / 100)
-            fees = (position.entry + exit_price) * position.qty * params.fee_pct / 100
+            fees = (position.entry + exit_price) * position.qty * fee_rate(params, position.symbol)
             trades.append(
                 metrics.Trade(
                     id=f"bt-{len(trades) + 1}",
@@ -331,6 +376,11 @@ def render_summary(result: Result) -> str:
         f"  notional=${result.params.notional:,.0f} fee={result.params.fee_pct:g}% "
         f"slippage={result.params.slippage_pct:g}%",
     ]
+    if result.params.fee_schedule:
+        known = ", ".join(
+            f"{symbol} {rate * 100:.3f}%" for symbol, rate in sorted(result.params.fee_schedule.items())
+        )
+        lines.append(f"  fees por exchange: {known}")
     if result.trades:
         lines += ["", "Primeras operaciones"]
         for trade in result.trades[:5]:
@@ -389,7 +439,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-hold", type=float, default=72.0, help="horas máximas en posición")
     parser.add_argument("--cooldown", type=float, default=6.0, help="horas sin reentrar tras cerrar")
     parser.add_argument("--notional", type=float, default=1_000.0)
-    parser.add_argument("--fee", type=float, default=0.1, help="% por lado")
+    parser.add_argument("--fee", type=float, default=0.1, help="% por lado (modo fijo)")
+    parser.add_argument(
+        "--fees",
+        choices=("fixed", "exchange"),
+        default="fixed",
+        help="usar el fee fijo o leer el taker del exchange",
+    )
     parser.add_argument("--slippage", type=float, default=0.05, help="% por lado")
     parser.add_argument("--equity", type=float, default=10_000.0)
     parser.add_argument("--sweep", action="store_true", help="probar consenso 1-3 × macro 0/3")
@@ -425,6 +481,18 @@ def main(argv: list[str] | None = None) -> int:
         slippage_pct=args.slippage,
         start_equity=args.equity,
     )
+
+    if args.fees == "exchange":
+        exchange_id = env("CCXT_EXCHANGE", "binance")
+        try:
+            params.fee_schedule = load_fee_schedule(tracked_symbols(snapshots), exchange_id)
+        except Exception as exc:  # noqa: BLE001 - the backtest must run offline
+            print(
+                f"aviso: no se pudieron leer fees de {exchange_id} ({exc}); se usa --fee",
+                file=sys.stderr,
+            )
+        if not params.fee_schedule:
+            print("aviso: sin fees del exchange; se usa el fee fijo", file=sys.stderr)
 
     if args.sweep:
         rows = sweep_rows(snapshots, params)
