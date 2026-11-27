@@ -38,11 +38,16 @@ Use best bid/ask for mid price.
 2. Choose outcome (Yes/No/etc.)
 3. Read corresponding `token_id`
 4. Query CLOB orderbook directly from Polymarket
-5. Publish to AI-Trader with:
-   - `market: "polymarket"`
-   - `symbol: <slug or conditionId>`
-   - `outcome: <Yes/No>`
-   - optional `token_id`
+5. Publish to AI-Trader with `market: "polymarket"`, `symbol: <slug>`,
+   `outcome: <Yes/No>` and optional `token_id`.
+
+Local helper (same data, plus edge and sizing):
+
+```bash
+python polymarket.py markets --query "fed" --min-liquidity 5000
+python polymarket.py book --slug <slug> --outcome Yes
+python polymarket.py bet --slug <slug> --outcome Yes --prob 0.62 --publish
+```
 
 ## AI-Trader Publishing
 ```json

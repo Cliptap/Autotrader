@@ -350,5 +350,6 @@ Debe devolver posiciones, régimen de mercado y candidatos, sin ejecutar nada.
 - [ ] `python scripts/backtest.py` corre sobre los snapshots disponibles
 - [ ] `python scripts/retention.py` informa un plan coherente
 - [ ] `alert_state.json` no aparece en `git status`
+- [ ] `python polymarket.py markets --limit 3` devuelve mercados
 - [ ] `.env`, `mcp/ccxt/.env` y `secrets/` no aparecen en `git status`
 - [ ] `/trading-scan` corre de punta a punta sin ejecutar órdenes

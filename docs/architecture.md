@@ -151,6 +151,15 @@ reales. Advierte cuando la muestra es demasiado corta para concluir.
 
 Detalle: [`docs/backtest.md`](backtest.md).
 
+### Polymarket
+
+`polymarket.py` cubre el vertical de mercados binarios sin custodia: descubre
+mercados en Gamma, lee el order book del CLOB, calcula edge y Kelly, y publica
+la apuesta como señal paper en AI-Trader. La ejecución real queda fuera por
+diseño: implicaría firmar órdenes con una clave privada de Polygon.
+
+Detalle: [`docs/polymarket.md`](polymarket.md).
+
 ## Flujo de una operación
 
 ```mermaid

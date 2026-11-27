@@ -230,10 +230,27 @@ manual.
 
 ## Prioridad 4 — cobertura
 
-### 4.1 Polymarket ejecutable
+### 4.1 Polymarket
 
-Hoy es solo lectura de mercados. Falta confirmar si la plataforma expone
-ejecución y, si no, integrar un cliente on-chain con límites propios.
+**Estado: research + paper implementados; ejecución real fuera de alcance por
+diseño** (ver [`polymarket.md`](polymarket.md)).
+
+- Discovery y filtros contra Gamma (liquidez, volumen, cierre, búsqueda).
+- Order book del CLOB con mejor bid/ask, spread y profundidad.
+- Edge, Kelly fraccional y tope del 2% del equity.
+- Registro paper en AI-Trader (`market: polymarket`), con `--publish` explícito.
+- 19 tests de parsing, filtros, libro, edge, sizing y payload.
+
+**Por qué no ejecuta.** Polymarket expone ejecución vía CLOB, pero requiere
+custodiar una clave privada de Polygon, allowances de USDC y firma EIP-712 de
+cada orden. Eso es un riesgo de custodia que no se valida en paper.
+
+**Pendiente.**
+
+- [ ] diseño de custodia con firmante separado (hardware wallet / KMS)
+- [ ] allowances y credenciales L2 documentadas paso a paso
+- [ ] prueba end-to-end en Polygon testnet
+- [ ] límites propios por mercado y por evento
 
 ### 4.2 Multi-exchange
 
