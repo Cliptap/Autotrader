@@ -304,7 +304,23 @@ Programalo mensualmente. Detalle: [`docs/retention.md`](retention.md).
 
 ---
 
-## 12. Verificar
+## 12. Tiempo real (opcional)
+
+Para intradía, el polling de 5 minutos no alcanza. El relay mantiene un socket
+abierto y escribe al bus local:
+
+```bash
+python realtime.py --source binance --once --dry-run   # probar
+python realtime.py --source binance --live            # precio en vivo
+python events.py tail --follow                        # consumir
+```
+
+AI-Trader también tiene socket de notificaciones (requiere el token). Detalle:
+[`docs/realtime.md`](realtime.md).
+
+---
+
+## 13. Verificar
 
 ```bash
 python scripts/preflight.py
@@ -351,5 +367,7 @@ Debe devolver posiciones, régimen de mercado y candidatos, sin ejecutar nada.
 - [ ] `python scripts/retention.py` informa un plan coherente
 - [ ] `alert_state.json` no aparece en `git status`
 - [ ] `python polymarket.py markets --limit 3` devuelve mercados
+- [ ] `python realtime.py --source binance --once --dry-run` recibe un tick
+- [ ] `python events.py stats` reporta eventos
 - [ ] `.env`, `mcp/ccxt/.env` y `secrets/` no aparecen en `git status`
 - [ ] `/trading-scan` corre de punta a punta sin ejecutar órdenes

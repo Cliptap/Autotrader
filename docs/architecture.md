@@ -160,6 +160,15 @@ diseño: implicaría firmar órdenes con una clave privada de Polygon.
 
 Detalle: [`docs/polymarket.md`](polymarket.md).
 
+### Tiempo real
+
+`realtime.py` mantiene sockets abiertos (Binance `bookTicker` y notificaciones de
+AI-Trader) y escribe eventos normalizados en `state/events.jsonl`; `events.py`
+los lee, sigue en vivo y reporta estadísticas. El collector sigue siendo la
+fuente de snapshots; el relay cubre lo que no puede esperar cinco minutos.
+
+Detalle: [`docs/realtime.md`](realtime.md).
+
 ## Flujo de una operación
 
 ```mermaid

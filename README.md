@@ -134,6 +134,8 @@ Guía completa: [`docs/setup.md`](docs/setup.md).
 ├── risk_engine.py             # ejecuta los stops aunque no haya sesión abierta
 ├── exchange_rules.py          # normaliza cantidades, ticks y mínimos por exchange
 ├── polymarket.py              # investigación, edge y paper de mercados binarios
+├── events.py                  # bus de eventos local (JSONL)
+├── realtime.py                # relay WebSocket → bus
 ├── sanitize.py                # redacta credenciales antes de persistir datos
 ├── scripts/
 │   ├── preflight.py           # valida entorno, claves y conectividad
@@ -201,6 +203,7 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 | [`docs/retention.md`](docs/retention.md) | Compactación de snapshots sin perder lo necesario |
 | [`docs/multi-exchange.md`](docs/multi-exchange.md) | Normalizar mínimos, steps y fees por exchange |
 | [`docs/polymarket.md`](docs/polymarket.md) | Mercados binarios: discovery, edge y paper |
+| [`docs/realtime.md`](docs/realtime.md) | WebSocket, bus de eventos y consumo |
 | [`docs/troubleshooting.md`](docs/troubleshooting.md) | Síntomas, causas y arreglos |
 | [`docs/roadmap.md`](docs/roadmap.md) | Qué falta y cómo construirlo |
 
@@ -220,5 +223,6 @@ Detalle: [`docs/risk-policy.md`](docs/risk-policy.md) y
 - Retención de snapshots en tres niveles de resolución.
 - Normalización de órdenes por exchange (mínimos, step, tick, fees).
 - Polymarket: discovery, order book, edge/Kelly y paper en AI-Trader.
-- Pendiente: ejecución real on-chain y swap/futuros. Ver
-  [`docs/roadmap.md`](docs/roadmap.md).
+- Tiempo real: relay WebSocket de precios y notificaciones hacia un bus local.
+- Pendiente: ejecución real on-chain, swap/futuros y scanner en tiempo real.
+  Ver [`docs/roadmap.md`](docs/roadmap.md).

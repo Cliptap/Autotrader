@@ -274,8 +274,23 @@ cada orden. Eso es un riesgo de custodia que no se valida en paper.
 
 ### 4.3 Alertas de mercado en tiempo real
 
-El collector es por polling (5 min). Para estrategias intradía hace falta
-WebSocket (`wss://ai4trade.ai/ws/notify/{client_id}`) y un bus de eventos local.
+**Estado: implementado** (ver [`realtime.md`](realtime.md)).
+
+- `realtime.py` mantiene sockets abiertos y normaliza eventos:
+  - Binance `bookTicker` (público, testnet por defecto),
+  - notificaciones de AI-Trader (token en query string).
+- `events.py` administra el bus local (`state/events.jsonl`): append con
+  rotación, lectura de los últimos N, seguimiento en vivo y estadísticas.
+- Reconexión con backoff exponencial.
+- Los payloads se redactan con `sanitize.scrub_secrets` antes de persistirse.
+- 20 tests de parsing, URLs, bus y rotación, sin red.
+
+**Pendiente.**
+
+- [ ] WebSocket del CLOB de Polymarket
+- [ ] que el scanner consuma el bus (frenesí con latencia de segundos)
+- [ ] rotación multi-archivo con retención
+- [ ] alertas por umbral de precio desde el relay (sin ejecutar)
 
 ---
 
