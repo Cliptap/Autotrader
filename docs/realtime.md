@@ -154,6 +154,6 @@ bus.
 ## Pendiente
 
 - WebSocket del CLOB de Polymarket (precio de outcomes en vivo).
-- Que el scanner consuma el bus para detectar frenesí con segundos de latencia
-  en lugar de cinco minutos.
+- Que el relay alerte por umbral de precio directo (hoy el scanner lee el bus y
+  evalúa cada 5 minutos).
 - Compresión/rotación más fina del bus (hoy rota un solo archivo).

@@ -11,6 +11,7 @@ Actions cada 5 minutos o localmente en loop.
 | Frenesí del feed | ≥ N compras del mismo activo en el feed global | `GLOBAL_BUY_FRENZY=5` |
 | Macro alcista | `bullish_count` del macro intel ≥ N | `MACRO_BULLISH_THRESHOLD=3` |
 | Acción de alta convicción | Score y comunidad de un agente de referencia | `STOCK_MIN_SCORE=8`, `STOCK_MIN_COMMUNITY=5` |
+| Movimiento de precio | Cambio ≥ X% en la ventana del bus (si existe) | `PRICE_MOVE_PCT=1.0`, `PRICE_MOVE_WINDOW_MIN=15` |
 | Horario de acciones | Solo 9:30–16:00 ET, lunes a viernes | Zona `America/New_York`, DST incluido |
 
 Los umbrales son constantes al inicio de `scanner.py`. Cambiarlos es una decisión
@@ -30,6 +31,8 @@ calidad; si se baja, pasa lo contrario.
 | `CLIPTAP_AI_TOKEN` | Sí | — |
 | `CLIPTAP_NTFY_TOPIC` | No | `cliptap-alerts` |
 | `ALERT_COOLDOWN_MIN` | No | `60` |
+| `PRICE_MOVE_PCT` | No | `1.0` |
+| `PRICE_MOVE_WINDOW_MIN` | No | `15` |
 
 El scanner falla al arrancar si falta el token. No hay token embebido: un token
 en el código es un token filtrado.
@@ -49,6 +52,28 @@ En GitHub Actions el runner es efímero, así que el workflow restaura y guarda
 `alert_state.json` con `actions/cache`. Sin eso, cada ejecución empezaría sin
 memoria y el cooldown no serviría de nada. También hay `concurrency` para que no
 corran dos scans a la vez.
+
+## Movimientos de precio desde el bus
+
+Si existe `state/events.jsonl` (lo genera `realtime.py`), el scanner suma una
+señal que el feed de agentes no puede dar: movimiento de precio dentro de la
+ventana.
+
+- Toma eventos `book_ticker` de Binance de los últimos `PRICE_MOVE_WINDOW_MIN`
+  minutos (default 15).
+- Si el precio se movió `PRICE_MOVE_PCT` (default 1%), alerta con dirección y
+  porcentaje.
+- Usa el mismo cooldown que el resto: un movimiento no repite cada 5 minutos.
+
+```text
+▲ BTC/USDT +2.50%
+15 min: 60000 → 61500 (+2.50%)
+```
+
+En GitHub Actions el bus no existe y esta señal simplemente no se evalúa. La
+latencia la define el relay: si corre en tu máquina, el scanner ve los últimos
+15 minutos al momento de correr (cada 5 minutos). Para latencia de segundos hace
+falta que el propio relay alerte, no el scanner.
 
 ## Despliegue en GitHub Actions
 

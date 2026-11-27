@@ -268,7 +268,7 @@ cada orden. Eso es un riesgo de custodia que no se valida en paper.
 
 **Pendiente.**
 
-- [ ] inyectar `taker_fee`/`maker_fee` del mercado en el backtester
+- [x] inyectar `taker_fee` del mercado en el backtester (`--fees exchange`)
 - [ ] soportar swap/futuros (cierre con orden opuesta, margen, liquidación)
 - [ ] matriz de humo por exchange contra su testnet
 
@@ -288,7 +288,9 @@ cada orden. Eso es un riesgo de custodia que no se valida en paper.
 **Pendiente.**
 
 - [ ] WebSocket del CLOB de Polymarket
-- [ ] que el scanner consuma el bus (frenesí con latencia de segundos)
+- [x] que el scanner consuma el bus (`PRICE_MOVE_PCT` / `PRICE_MOVE_WINDOW_MIN`)
+- [ ] alertas desde el relay en el momento del movimiento (latencia de segundos
+      sin esperar el ciclo del scanner)
 - [ ] rotación multi-archivo con retención
 - [ ] alertas por umbral de precio desde el relay (sin ejecutar)
 

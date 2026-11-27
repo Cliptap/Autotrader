@@ -105,6 +105,8 @@ cuenta.
 | `CLIPTAP_AGENT_ID` | No | `0` | collector |
 | `CLIPTAP_NTFY_TOPIC` | Sí | `cliptap-alerts` | scanner |
 | `ALERT_COOLDOWN_MIN` | No | `60` | scanner |
+| `PRICE_MOVE_PCT` | No | `1.0` | scanner (bus) |
+| `PRICE_MOVE_WINDOW_MIN` | No | `15` | scanner (bus) |
 | `ALPACA_API_KEY` | Para acciones | — | MCP de Alpaca |
 | `ALPACA_SECRET_KEY` | Para acciones | — | MCP de Alpaca |
 | `ALPACA_PAPER_TRADE` | No | `true` | MCP de Alpaca |

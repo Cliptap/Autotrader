@@ -36,8 +36,29 @@ lookahead.
 | Tiempo máximo en posición | 72 h |
 | Cooldown tras cerrar | 6 h (evita reentrar en el mismo snapshot) |
 | Tamaño | notional fijo (USD 1.000) |
-| Fees | 0.1% por lado |
+| Fees | Fijas (`--fee`, default 0.1% por lado) o del exchange (`--fees exchange`) |
 | Slippage | 0.05% por lado |
+
+### Fees reales
+
+Con `--fees exchange` el backtest lee el `taker` de cada mercado desde ccxt en
+vez de usar un valor único:
+
+```bash
+python scripts/backtest.py --fees exchange
+```
+
+```text
+fees por exchange: BTC 0.100%, ETH 0.100%, SOL 0.100%
+```
+
+Los símbolos de los snapshots vienen sin quote (`BTC`), así que se asume el par
+contra USDT en el exchange configurado (`CCXT_EXCHANGE`). Si el exchange no
+responde o el símbolo no existe, cae al fee fijo y lo avisa. Las acciones no
+tienen fee en Alpaca y quedan en cero.
+
+El fee es el `taker` público: no modela descuentos por BNB, nivel de volumen ni
+maker/taker distinto por orden.
 
 Una posición por símbolo. Las salidas se procesan antes que las entradas: si el
 precio perfora el stop en el mismo snapshot en que aparece una señal nueva, la
